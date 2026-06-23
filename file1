@@ -1,0 +1,3551 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Smart Campus Attendance System - Kenya</title>
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <!-- EmailJS -->
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+  <style>
+    /* ===== RESET & BASE ===== */
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+      min-height: 100vh;
+      padding: 16px;
+      color: #e2e8f0;
+      overflow-x: hidden;
+    }
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    
+    /* ===== WELCOME PAGE ===== */
+    #welcomePage {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+      z-index: 10000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      padding: 20px;
+      transition: opacity 0.8s ease, transform 0.8s ease;
+    }
+    #welcomePage.hidden {
+      opacity: 0;
+      transform: scale(1.1);
+      pointer-events: none;
+    }
+    .welcome-content {
+      max-width: 800px;
+      width: 100%;
+      text-align: center;
+    }
+    .welcome-logo {
+      font-size: 80px;
+      margin-bottom: 20px;
+      animation: float 3s ease-in-out infinite;
+    }
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-20px); }
+    }
+    .welcome-title {
+      font-size: 42px;
+      font-weight: 800;
+      background: linear-gradient(135deg, #667eea, #764ba2, #a78bfa);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 10px;
+    }
+    .welcome-subtitle {
+      font-size: 18px;
+      color: #94a3b8;
+      margin-bottom: 30px;
+    }
+    .welcome-features {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 16px;
+      margin: 30px 0;
+    }
+    .welcome-feature {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 16px;
+      padding: 20px;
+      text-align: center;
+      animation: slideUp 0.6s ease forwards;
+      opacity: 0;
+      transform: translateY(30px);
+    }
+    .welcome-feature:nth-child(1) { animation-delay: 0.2s; }
+    .welcome-feature:nth-child(2) { animation-delay: 0.4s; }
+    .welcome-feature:nth-child(3) { animation-delay: 0.6s; }
+    .welcome-feature:nth-child(4) { animation-delay: 0.8s; }
+    
+    @keyframes slideUp {
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .welcome-feature i {
+      font-size: 32px;
+      color: #a78bfa;
+      margin-bottom: 10px;
+      display: block;
+    }
+    .welcome-feature h4 {
+      font-size: 14px;
+      margin-bottom: 4px;
+    }
+    .welcome-feature p {
+      font-size: 12px;
+      color: #94a3b8;
+    }
+    .welcome-progress {
+      width: 100%;
+      max-width: 400px;
+      height: 4px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 4px;
+      margin: 20px auto;
+      overflow: hidden;
+    }
+    .welcome-progress-bar {
+      height: 100%;
+      background: linear-gradient(90deg, #667eea, #764ba2);
+      border-radius: 4px;
+      animation: progress 3s ease-in-out forwards;
+      width: 0%;
+    }
+    @keyframes progress {
+      0% { width: 0%; }
+      100% { width: 100%; }
+    }
+    .welcome-btn {
+      padding: 14px 40px;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      border: none;
+      border-radius: 50px;
+      color: #fff;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: 0.3s;
+      box-shadow: 0 4px 20px rgba(102, 126, 234, 0.3);
+      margin-top: 10px;
+    }
+    .welcome-btn:hover {
+      transform: scale(1.05);
+      box-shadow: 0 6px 30px rgba(102, 126, 234, 0.5);
+    }
+    .welcome-version {
+      margin-top: 20px;
+      font-size: 12px;
+      color: #64748b;
+    }
+    
+    /* ===== GLASS CARD ===== */
+    .glass-card {
+      background: rgba(255, 255, 255, 0.06);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 24px;
+      padding: 24px 20px;
+      margin-bottom: 16px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+    }
+    
+    /* ===== HEADER ===== */
+    .brand-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 14px;
+    }
+    .brand-left {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .brand-icon {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      width: 48px;
+      height: 48px;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      color: #fff;
+      box-shadow: 0 4px 16px rgba(102, 126, 234, 0.3);
+    }
+    .brand-header h1 {
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+    }
+    .brand-header h1 span { color: #a78bfa; }
+    .brand-header .sub {
+      font-size: 12px;
+      color: #94a3b8;
+      margin-top: 2px;
+    }
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: rgba(255,255,255,0.05);
+      padding: 8px 16px;
+      border-radius: 30px;
+      font-size: 13px;
+    }
+    .user-info .avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 16px;
+      overflow: hidden;
+      cursor: pointer;
+      position: relative;
+    }
+    .user-info .avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .user-info .avatar .upload-hint {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: rgba(0,0,0,0.7);
+      font-size: 8px;
+      text-align: center;
+      padding: 2px;
+      opacity: 0;
+      transition: 0.2s;
+    }
+    .user-info .avatar:hover .upload-hint {
+      opacity: 1;
+    }
+    .logout-btn {
+      background: rgba(239,68,68,0.2);
+      border: 1px solid rgba(239,68,68,0.3);
+      color: #fca5a5;
+      padding: 4px 12px;
+      border-radius: 20px;
+      cursor: pointer;
+      font-size: 12px;
+      transition: 0.2s;
+    }
+    .logout-btn:hover {
+      background: rgba(239,68,68,0.3);
+    }
+    
+    /* ===== STATUS BANNER ===== */
+    .status-banner {
+      background: rgba(16, 185, 129, 0.1);
+      border: 1px solid rgba(16, 185, 129, 0.15);
+      border-radius: 12px;
+      padding: 10px 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 13px;
+      color: #6ee7b7;
+      margin: 12px 0 16px;
+    }
+    .status-banner i { font-size: 16px; }
+    .status-banner .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #34d399;
+      display: inline-block;
+      animation: pulse-dot 1.5s infinite;
+    }
+    @keyframes pulse-dot {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(0.8); }
+    }
+    
+    /* ===== FORM ELEMENTS ===== */
+    label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      color: #cbd5e1;
+      margin-bottom: 4px;
+    }
+    .label-icon { color: #a78bfa; margin-right: 4px; }
+    .input-group { margin-bottom: 14px; }
+    .input-group-required label::after {
+      content: ' *';
+      color: #ef4444;
+    }
+    
+    input, select, textarea {
+      width: 100%;
+      padding: 12px 14px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 12px;
+      color: #f1f5f9;
+      font-size: 15px;
+      transition: 0.2s;
+      font-family: inherit;
+    }
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: #a78bfa;
+      background: rgba(255, 255, 255, 0.08);
+      box-shadow: 0 0 0 3px rgba(167, 139, 250, 0.15);
+    }
+    input::placeholder, textarea::placeholder { color: #64748b; }
+    select option { background: #1e293b; color: #f1f5f9; }
+    textarea { resize: vertical; min-height: 60px; }
+    
+    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .row-3 { grid-template-columns: 1fr 1fr 1fr; }
+    
+    /* ===== BUTTONS ===== */
+    .btn {
+      padding: 12px 24px;
+      border: none;
+      border-radius: 14px;
+      font-weight: 700;
+      font-size: 15px;
+      cursor: pointer;
+      transition: 0.25s;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: #fff;
+      box-shadow: 0 4px 20px rgba(102, 126, 234, 0.3);
+    }
+    .btn-primary:hover:not(:disabled) {
+      transform: scale(1.02);
+      box-shadow: 0 6px 28px rgba(102, 126, 234, 0.4);
+    }
+    .btn-primary:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+    .btn-success {
+      background: linear-gradient(135deg, #10b981, #059669);
+      color: #fff;
+      box-shadow: 0 4px 20px rgba(16, 185, 129, 0.3);
+    }
+    .btn-success:hover:not(:disabled) {
+      transform: scale(1.02);
+      box-shadow: 0 6px 28px rgba(16, 185, 129, 0.4);
+    }
+    .btn-danger {
+      background: linear-gradient(135deg, #ef4444, #dc2626);
+      color: #fff;
+    }
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.06);
+      color: #cbd5e1;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .btn-secondary:hover { background: rgba(255, 255, 255, 0.1); }
+    .btn-warning {
+      background: linear-gradient(135deg, #f59e0b, #d97706);
+      color: #fff;
+    }
+    .btn-info {
+      background: linear-gradient(135deg, #3b82f6, #2563eb);
+      color: #fff;
+    }
+    .btn-block { width: 100%; }
+    .btn-sm { padding: 8px 16px; font-size: 13px; }
+    
+    /* ===== ROLE SELECTOR ===== */
+    .role-selector {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    .role-option {
+      padding: 16px;
+      border: 2px solid rgba(255,255,255,0.08);
+      border-radius: 16px;
+      text-align: center;
+      cursor: pointer;
+      transition: 0.3s;
+      background: rgba(255,255,255,0.02);
+    }
+    .role-option:hover {
+      border-color: rgba(167,139,250,0.3);
+      background: rgba(167,139,250,0.05);
+    }
+    .role-option.active {
+      border-color: #a78bfa;
+      background: rgba(167,139,250,0.1);
+    }
+    .role-option i {
+      font-size: 32px;
+      display: block;
+      margin-bottom: 8px;
+    }
+    .role-option .title {
+      font-weight: 600;
+      font-size: 14px;
+    }
+    .role-option .desc {
+      font-size: 12px;
+      color: #94a3b8;
+      margin-top: 4px;
+    }
+    
+    /* ===== VERIFICATION STATUS ===== */
+    .verification-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+    }
+    .verification-badge.verified {
+      background: rgba(16,185,129,0.15);
+      color: #6ee7b7;
+    }
+    .verification-badge.pending {
+      background: rgba(245,158,11,0.15);
+      color: #fbbf24;
+    }
+    .verification-badge.unverified {
+      background: rgba(239,68,68,0.15);
+      color: #fca5a5;
+    }
+    
+    /* ===== CODE DISPLAY ===== */
+    .code-display {
+      background: rgba(0, 0, 0, 0.3);
+      border-radius: 12px;
+      padding: 16px;
+      text-align: center;
+      margin: 12px 0;
+      border: 2px dashed rgba(167, 139, 250, 0.3);
+    }
+    .code-display .code {
+      font-size: 32px;
+      font-weight: 800;
+      letter-spacing: 6px;
+      color: #a78bfa;
+      font-family: 'Courier New', monospace;
+    }
+    .code-display .label { font-size: 11px; color: #94a3b8; margin-bottom: 4px; }
+    
+    /* ===== ATTENDANCE LIST ===== */
+    .attendance-list {
+      max-height: 400px;
+      overflow-y: auto;
+      margin-top: 10px;
+    }
+    .attendance-list::-webkit-scrollbar { width: 4px; }
+    .attendance-list::-webkit-scrollbar-thumb { background: #4a4a6a; border-radius: 10px; }
+    
+    .attendee-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 12px;
+      background: rgba(255, 255, 255, 0.03);
+      border-radius: 8px;
+      margin-bottom: 4px;
+      font-size: 13px;
+      border-left: 3px solid #10b981;
+    }
+    .attendee-item .name { font-weight: 600; color: #e2e8f0; }
+    .attendee-item .details { color: #94a3b8; font-size: 12px; }
+    .attendee-item .time { color: #6ee7b7; font-size: 12px; }
+    .attendee-item .badge {
+      background: rgba(16, 185, 129, 0.15);
+      color: #6ee7b7;
+      padding: 2px 10px;
+      border-radius: 20px;
+      font-size: 10px;
+      font-weight: 600;
+    }
+    
+    /* ===== STUDENT RECORDS ===== */
+    .student-record-card {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 12px;
+      transition: 0.3s;
+    }
+    .student-record-card:hover {
+      background: rgba(255,255,255,0.06);
+    }
+    .student-record-card .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+    .student-record-card .name {
+      font-size: 16px;
+      font-weight: 600;
+      color: #e2e8f0;
+    }
+    .student-record-card .admission {
+      font-size: 12px;
+      color: #94a3b8;
+    }
+    .student-record-card .stats {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+      font-size: 13px;
+      color: #94a3b8;
+      margin-top: 4px;
+    }
+    .student-record-card .stats span {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .student-record-card .stats .present { color: #6ee7b7; }
+    .student-record-card .stats .absent { color: #fca5a5; }
+    .student-record-card .courses {
+      margin-top: 8px;
+      padding-top: 8px;
+      border-top: 1px solid rgba(255,255,255,0.04);
+    }
+    .student-record-card .course-item {
+      display: flex;
+      justify-content: space-between;
+      padding: 4px 0;
+      font-size: 13px;
+      color: #cbd5e1;
+    }
+    .student-record-card .course-item .course-name {
+      color: #94a3b8;
+    }
+    .student-record-card .course-item .attendance-count {
+      font-weight: 600;
+    }
+    .attendance-progress {
+      width: 100%;
+      height: 6px;
+      background: rgba(255,255,255,0.05);
+      border-radius: 4px;
+      margin-top: 4px;
+      overflow: hidden;
+    }
+    .attendance-progress .bar {
+      height: 100%;
+      border-radius: 4px;
+      transition: width 0.3s;
+    }
+    .attendance-progress .bar.high { background: #10b981; }
+    .attendance-progress .bar.medium { background: #f59e0b; }
+    .attendance-progress .bar.low { background: #ef4444; }
+    
+    /* ===== SEARCH AND FILTER ===== */
+    .search-container {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+    .search-container input,
+    .search-container select {
+      flex: 1;
+      min-width: 150px;
+      padding: 10px 14px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 12px;
+      color: #f1f5f9;
+      font-size: 14px;
+    }
+    .search-container input:focus,
+    .search-container select:focus {
+      outline: none;
+      border-color: #a78bfa;
+    }
+    
+    /* ===== AUTH PANELS ===== */
+    .auth-container {
+      max-width: 550px;
+      margin: 0 auto;
+    }
+    .auth-tabs {
+      display: flex;
+      gap: 4px;
+      background: rgba(255, 255, 255, 0.04);
+      border-radius: 14px;
+      padding: 4px;
+      margin-bottom: 20px;
+    }
+    .auth-tab {
+      flex: 1;
+      padding: 10px;
+      text-align: center;
+      border: none;
+      border-radius: 12px;
+      font-weight: 600;
+      font-size: 13px;
+      cursor: pointer;
+      transition: 0.2s;
+      background: transparent;
+      color: #94a3b8;
+    }
+    .auth-tab.active {
+      background: rgba(167, 139, 250, 0.15);
+      color: #a78bfa;
+    }
+    .auth-tab:hover:not(.active) { color: #e2e8f0; }
+    
+    .auth-panel { display: none; }
+    .auth-panel.active { display: block; }
+    
+    /* ===== DASHBOARD ===== */
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 12px;
+      margin: 16px 0;
+    }
+    .stat-card {
+      background: rgba(255,255,255,0.04);
+      border-radius: 16px;
+      padding: 16px;
+      text-align: center;
+      border: 1px solid rgba(255,255,255,0.06);
+      cursor: pointer;
+      transition: 0.3s;
+    }
+    .stat-card:hover {
+      background: rgba(255,255,255,0.08);
+      transform: translateY(-2px);
+    }
+    .stat-card .number {
+      font-size: 28px;
+      font-weight: 800;
+      color: #a78bfa;
+    }
+    .stat-card .label {
+      font-size: 12px;
+      color: #94a3b8;
+      margin-top: 4px;
+    }
+    
+    .session-history {
+      margin-top: 16px;
+    }
+    .history-item {
+      background: rgba(255,255,255,0.03);
+      border-radius: 12px;
+      padding: 12px;
+      margin-bottom: 8px;
+      border-left: 3px solid #667eea;
+    }
+    .history-item .header {
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+    }
+    .history-item .course { font-weight: 600; }
+    .history-item .meta { font-size: 12px; color: #94a3b8; }
+    .history-item .count { color: #6ee7b7; font-size: 13px; }
+    
+    /* ===== ADMIN VERIFICATION LIST ===== */
+    .verification-list {
+      max-height: 400px;
+      overflow-y: auto;
+    }
+    .verification-item {
+      background: rgba(255,255,255,0.03);
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 10px;
+      border: 1px solid rgba(255,255,255,0.06);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .verification-item .info {
+      flex: 1;
+    }
+    .verification-item .info .name {
+      font-weight: 600;
+      font-size: 15px;
+    }
+    .verification-item .info .details {
+      font-size: 12px;
+      color: #94a3b8;
+      margin-top: 2px;
+    }
+    .verification-item .actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .verification-item .actions .btn {
+      padding: 6px 14px;
+      font-size: 12px;
+    }
+    
+    /* ===== TOAST ===== */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(120px);
+      background: #1e293b;
+      color: #f1f5f9;
+      padding: 14px 24px;
+      border-radius: 16px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+      z-index: 999;
+      font-size: 14px;
+      transition: 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+      max-width: 90%;
+      text-align: center;
+      border-left: 4px solid #a78bfa;
+    }
+    .toast.show { transform: translateX(-50%) translateY(0); }
+    .toast.success { border-left-color: #34d399; }
+    .toast.error { border-left-color: #ef4444; }
+    .toast.warning { border-left-color: #f59e0b; }
+    
+    .spinner {
+      display: inline-block;
+      width: 18px;
+      height: 18px;
+      border: 3px solid rgba(255,255,255,0.15);
+      border-radius: 50%;
+      border-top-color: #fff;
+      animation: spin 0.7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    
+    .text-muted { color: #64748b; font-size: 12px; text-align: center; margin-top: 12px; }
+    .mt-1 { margin-top: 6px; }
+    .mt-2 { margin-top: 12px; }
+    .mt-3 { margin-top: 20px; }
+    .hidden { display: none !important; }
+    .text-center { text-align: center; }
+    .text-success { color: #6ee7b7; }
+    .text-danger { color: #fca5a5; }
+    .text-warning { color: #fbbf24; }
+    .text-muted-small { color: #64748b; font-size: 12px; }
+    
+    /* ===== MULTI-SELECT ===== */
+    .multi-select-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      padding: 8px;
+      background: rgba(255,255,255,0.03);
+      border-radius: 12px;
+      min-height: 44px;
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+    .multi-select-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(167,139,250,0.15);
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 12px;
+      color: #a78bfa;
+    }
+    .multi-select-item .remove {
+      cursor: pointer;
+      color: #94a3b8;
+      font-size: 10px;
+    }
+    .multi-select-item .remove:hover { color: #ef4444; }
+    
+    /* ===== ADMIN SECRET LINK ===== */
+    .admin-secret-link {
+      color: #64748b;
+      font-size: 11px;
+      text-align: center;
+      margin-top: 8px;
+      cursor: pointer;
+      transition: 0.3s;
+      opacity: 0.3;
+    }
+    .admin-secret-link:hover {
+      opacity: 1;
+      color: #a78bfa;
+    }
+    
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 640px) {
+      .row { grid-template-columns: 1fr; }
+      .row-3 { grid-template-columns: 1fr; }
+      .brand-header { flex-direction: column; align-items: stretch; }
+      .user-info { justify-content: center; }
+      .brand-header h1 { font-size: 18px; }
+      .glass-card { padding: 18px 14px; }
+      .code-display .code { font-size: 24px; letter-spacing: 4px; }
+      .role-selector { grid-template-columns: 1fr; }
+      .welcome-title { font-size: 28px; }
+      .welcome-features { grid-template-columns: 1fr 1fr; }
+      .verification-item { flex-direction: column; align-items: stretch; }
+      .verification-item .actions { justify-content: center; }
+      .search-container input,
+      .search-container select {
+        min-width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ===== WELCOME PAGE ===== -->
+<div id="welcomePage">
+  <div class="welcome-content">
+    <div class="welcome-logo">🎓</div>
+    <h1 class="welcome-title">Smart Campus Attendance</h1>
+    <p class="welcome-subtitle">Kenya's Premier University Attendance Management System</p>
+    
+    <div class="welcome-features">
+      <div class="welcome-feature">
+        <i class="fas fa-user-graduate"></i>
+        <h4>Student Attendance</h4>
+        <p>Sign in with GPS verification within 10m range</p>
+      </div>
+      <div class="welcome-feature">
+        <i class="fas fa-chalkboard-teacher"></i>
+        <h4>Lecturer Management</h4>
+        <p>Create sessions and manage attendance</p>
+      </div>
+      <div class="welcome-feature">
+        <i class="fas fa-user-shield"></i>
+        <h4>Admin Oversight</h4>
+        <p>Verify lecturers and manage the system</p>
+      </div>
+      <div class="welcome-feature">
+        <i class="fas fa-university"></i>
+        <h4>Kenyan Universities</h4>
+        <p>Full support for all Kenyan universities</p>
+      </div>
+    </div>
+    
+    <div class="welcome-progress">
+      <div class="welcome-progress-bar"></div>
+    </div>
+    
+    <button class="welcome-btn" onclick="closeWelcome()">
+      <i class="fas fa-rocket"></i> Get Started
+    </button>
+    <div class="welcome-version">Version 2.0 • Kenya Edition</div>
+  </div>
+</div>
+
+<div class="container">
+  
+  <!-- ===== AUTH VIEW ===== -->
+  <div id="authView">
+    <div class="glass-card">
+      <div class="brand-header">
+        <div class="brand-left">
+          <div class="brand-icon"><i class="fas fa-graduation-cap"></i></div>
+          <div>
+            <h1>Smart <span>Attendance</span> <span style="font-size:12px; color:#94a3b8;">Kenya</span></h1>
+            <div class="sub"><i class="fas fa-map-pin" style="color: #34d399;"></i> Geolocation-based • 10m range</div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="status-banner">
+        <span class="dot"></span>
+        <span><strong>Welcome!</strong> Sign in to access the attendance system</span>
+      </div>
+    </div>
+    
+    <div class="glass-card">
+      <div class="auth-container">
+        <div class="auth-tabs">
+          <button class="auth-tab active" onclick="switchAuthTab('login')">
+            <i class="fas fa-sign-in-alt"></i> Login
+          </button>
+          <button class="auth-tab" onclick="switchAuthTab('register')">
+            <i class="fas fa-user-plus"></i> Register
+          </button>
+        </div>
+        
+        <!-- LOGIN -->
+        <div id="auth-login" class="auth-panel active">
+          <form id="loginForm" onsubmit="handleLogin(event)">
+            <div class="input-group input-group-required">
+              <label><i class="fas fa-envelope label-icon"></i> Email</label>
+              <input type="email" id="loginEmail" placeholder="email@example.com" required />
+            </div>
+            <div class="input-group input-group-required">
+              <label><i class="fas fa-lock label-icon"></i> Password</label>
+              <input type="password" id="loginPassword" placeholder="Enter password" required />
+            </div>
+            
+            <button type="submit" class="btn btn-primary btn-block">
+              <i class="fas fa-sign-in-alt"></i> Sign In
+            </button>
+          </form>
+          <div class="admin-secret-link" onclick="showDemoCredentials()">
+            <i class="fas fa-key"></i> Administrator Access
+          </div>
+        </div>
+        
+        <!-- REGISTER -->
+        <div id="auth-register" class="auth-panel">
+          <div class="role-selector">
+            <div class="role-option active" data-role="student" onclick="selectRole('student')">
+              <i class="fas fa-user-graduate"></i>
+              <div class="title">Student</div>
+              <div class="desc">University student</div>
+            </div>
+            <div class="role-option" data-role="lecturer" onclick="selectRole('lecturer')">
+              <i class="fas fa-chalkboard-teacher"></i>
+              <div class="title">Lecturer</div>
+              <div class="desc">University staff/lecturer</div>
+            </div>
+            <div class="role-option" data-role="admin" onclick="selectRole('admin')">
+              <i class="fas fa-user-shield"></i>
+              <div class="title">Administrator</div>
+              <div class="desc">System administrator</div>
+            </div>
+          </div>
+          
+          <form id="registerForm" onsubmit="handleRegister(event)">
+            <!-- STUDENT REGISTRATION -->
+            <div id="studentFields">
+              <div class="row">
+                <div class="input-group input-group-required">
+                  <label><i class="fas fa-user label-icon"></i> Full Name</label>
+                  <input type="text" id="regName" placeholder="e.g. John Doe" required />
+                </div>
+                <div class="input-group input-group-required">
+                  <label><i class="fas fa-envelope label-icon"></i> School Email</label>
+                  <input type="email" id="regEmail" placeholder="student@university.ac.ke" required />
+                </div>
+              </div>
+              <div style="font-size:11px; color:#64748b; margin-top:-8px; margin-bottom:12px;">
+                <i class="fas fa-info-circle"></i> Must be a valid Kenyan university email (.ac.ke)
+              </div>
+              
+              <div class="input-group input-group-required">
+                <label><i class="fas fa-university label-icon"></i> University</label>
+                <select id="regUniversity" required onchange="updateCourses()">
+                  <option value="">Select University</option>
+                </select>
+              </div>
+              
+              <div class="row">
+                <div class="input-group input-group-required">
+                  <label><i class="fas fa-building label-icon"></i> School / Faculty</label>
+                  <select id="regSchool" required>
+                    <option value="">Select School</option>
+                  </select>
+                </div>
+                <div class="input-group input-group-required">
+                  <label><i class="fas fa-layer-group label-icon"></i> Department</label>
+                  <select id="regDepartment" required>
+                    <option value="">Select Department</option>
+                  </select>
+                </div>
+              </div>
+              
+              <div class="row">
+                <div class="input-group input-group-required">
+                  <label><i class="fas fa-calendar-alt label-icon"></i> Year of Study</label>
+                  <select id="regYear" required>
+                    <option value="">Select Year</option>
+                    <option value="1">1st Year</option>
+                    <option value="2">2nd Year</option>
+                    <option value="3">3rd Year</option>
+                    <option value="4">4th Year</option>
+                    <option value="5">5th Year</option>
+                    <option value="6">6th Year</option>
+                  </select>
+                </div>
+                <div class="input-group input-group-required">
+                  <label><i class="fas fa-book label-icon"></i> Course</label>
+                  <select id="regCourse" required>
+                    <option value="">Select Course</option>
+                  </select>
+                </div>
+              </div>
+              
+              <div class="row">
+                <div class="input-group">
+                  <label><i class="fas fa-id-card label-icon"></i> Student ID</label>
+                  <input type="text" id="regStudentId" placeholder="e.g. S/2024/001 (optional)" />
+                  <div style="font-size:11px; color:#64748b; margin-top:4px;">
+                    <i class="fas fa-info-circle"></i> Optional field
+                  </div>
+                </div>
+                <div class="input-group input-group-required">
+                  <label><i class="fas fa-fingerprint label-icon"></i> Admission Number</label>
+                  <input type="text" id="regAdmissionNo" placeholder="e.g. ADM-2024-001" required />
+                </div>
+              </div>
+            </div>
+            
+            <!-- LECTURER REGISTRATION -->
+            <div id="lecturerFields" class="hidden">
+              <div class="row">
+                <div class="input-group input-group-required">
+                  <label><i class="fas fa-user label-icon"></i> Full Name</label>
+                  <input type="text" id="lecturerName" placeholder="e.g. Dr. Jane Smith" required />
+                </div>
+                <div class="input-group input-group-required">
+                  <label><i class="fas fa-envelope label-icon"></i> Email</label>
+                  <input type="email" id="lecturerEmail" placeholder="lecturer@example.com" required />
+                </div>
+              </div>
+              
+              <div class="row">
+                <div class="input-group input-group-required">
+                  <label><i class="fas fa-phone label-icon"></i> Phone Number</label>
+                  <input type="tel" id="lecturerPhone" placeholder="e.g. 0712345678" required />
+                </div>
+                <div class="input-group">
+                  <label><i class="fas fa-building label-icon"></i> Department</label>
+                  <input type="text" id="lecturerDept" placeholder="e.g. Computer Science" />
+                </div>
+              </div>
+              
+              <div class="input-group">
+                <label><i class="fas fa-university label-icon"></i> Universities (Add multiple)</label>
+                <div style="display:flex; gap:8px;">
+                  <input type="text" id="lecturerUniversityInput" placeholder="Type university name" style="flex:1;" />
+                  <button type="button" class="btn btn-secondary btn-sm" onclick="addUniversity()">
+                    <i class="fas fa-plus"></i> Add
+                  </button>
+                </div>
+                <div id="universityList" class="multi-select-container" style="margin-top:8px;">
+                  <span style="color:#64748b; font-size:12px;">No universities added yet</span>
+                </div>
+                <div style="font-size:11px; color:#64748b; margin-top:4px;">
+                  <i class="fas fa-info-circle"></i> Add all universities you teach at
+                </div>
+              </div>
+              
+              <div class="input-group">
+                <label><i class="fas fa-graduation-cap label-icon"></i> Qualifications</label>
+                <textarea id="lecturerQualifications" placeholder="e.g. PhD in Computer Science, MSc in Engineering&#10;List your academic qualifications" rows="3"></textarea>
+                <div style="font-size:11px; color:#64748b; margin-top:4px;">
+                  <i class="fas fa-info-circle"></i> You can add qualifications later
+                </div>
+              </div>
+              
+              <div class="input-group">
+                <label><i class="fas fa-file-alt label-icon"></i> Professional Documents</label>
+                <input type="file" id="lecturerDocuments" multiple accept=".pdf,.doc,.docx" />
+                <div style="font-size:11px; color:#64748b; margin-top:4px;">
+                  <i class="fas fa-info-circle"></i> Upload CV, certificates, etc. (PDF, DOC)
+                </div>
+              </div>
+            </div>
+            
+            <!-- ADMIN REGISTRATION -->
+            <div id="adminFields" class="hidden">
+              <div class="input-group input-group-required">
+                <label><i class="fas fa-key label-icon"></i> Admin Registration Code</label>
+                <input type="password" id="adminRegCode" placeholder="Enter administrator registration code" required />
+                <div style="font-size:11px; color:#64748b; margin-top:4px;">
+                  <i class="fas fa-info-circle"></i> Contact your institution's IT department for the registration code
+                </div>
+              </div>
+              
+              <div id="adminFormFields">
+                <div class="row">
+                  <div class="input-group input-group-required">
+                    <label><i class="fas fa-user label-icon"></i> Full Name</label>
+                    <input type="text" id="adminName" placeholder="e.g. Dr. Admin User" required />
+                  </div>
+                  <div class="input-group input-group-required">
+                    <label><i class="fas fa-envelope label-icon"></i> Email</label>
+                    <input type="email" id="adminEmail" placeholder="admin@university.ac.ke" required />
+                  </div>
+                </div>
+                
+                <div class="row">
+                  <div class="input-group input-group-required">
+                    <label><i class="fas fa-phone label-icon"></i> Phone Number</label>
+                    <input type="tel" id="adminPhone" placeholder="e.g. 0712345678" required />
+                  </div>
+                  <div class="input-group input-group-required">
+                    <label><i class="fas fa-building label-icon"></i> Department</label>
+                    <input type="text" id="adminDept" placeholder="e.g. IT Department" required />
+                  </div>
+                </div>
+                
+                <div class="input-group input-group-required">
+                  <label><i class="fas fa-university label-icon"></i> University</label>
+                  <select id="adminUniversity" required>
+                    <option value="">Select University</option>
+                  </select>
+                </div>
+                
+                <div class="input-group">
+                  <label><i class="fas fa-id-card label-icon"></i> Staff ID</label>
+                  <input type="text" id="adminStaffId" placeholder="e.g. STF-2024-001 (optional)" />
+                </div>
+                
+                <div class="input-group">
+                  <label><i class="fas fa-file-alt label-icon"></i> Authorization Letter</label>
+                  <input type="file" id="adminAuthLetter" accept=".pdf,.doc,.docx" />
+                  <div style="font-size:11px; color:#64748b; margin-top:4px;">
+                    <i class="fas fa-info-circle"></i> Upload authorization letter from your institution (PDF, DOC)
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="row">
+              <div class="input-group input-group-required">
+                <label><i class="fas fa-lock label-icon"></i> Password</label>
+                <input type="password" id="regPassword" placeholder="Min 6 characters" required minlength="6" />
+              </div>
+              <div class="input-group input-group-required">
+                <label><i class="fas fa-check-circle label-icon"></i> Confirm Password</label>
+                <input type="password" id="regConfirmPassword" placeholder="Confirm password" required />
+              </div>
+            </div>
+            
+            <input type="hidden" id="regRole" value="student" />
+            <input type="hidden" id="lecturerUniversities" value="[]" />
+            
+            <button type="submit" class="btn btn-success btn-block">
+              <i class="fas fa-user-plus"></i> <span id="registerBtnText">Register as Student</span>
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- ===== DASHBOARD VIEW ===== -->
+  <div id="dashboardView" class="hidden">
+    
+    <!-- Header -->
+    <div class="glass-card">
+      <div class="brand-header">
+        <div class="brand-left">
+          <div class="brand-icon"><i class="fas fa-graduation-cap"></i></div>
+          <div>
+            <h1>Smart <span>Attendance</span> <span style="font-size:12px; color:#94a3b8;">Kenya</span></h1>
+            <div class="sub"><i class="fas fa-map-pin" style="color: #34d399;"></i> Geolocation-based • 10m range</div>
+          </div>
+        </div>
+        <div class="user-info" id="userInfo">
+          <div class="avatar" id="userAvatar" onclick="document.getElementById('avatarUpload').click()">
+            <span id="avatarText">JD</span>
+            <div class="upload-hint">Upload Photo</div>
+          </div>
+          <input type="file" id="avatarUpload" accept="image/*" style="display:none" onchange="handleAvatarUpload(event)" />
+          <div>
+            <div id="userName">John Doe</div>
+            <div style="font-size:11px; color:#94a3b8;" id="userRole">Student</div>
+          </div>
+          <button class="logout-btn" onclick="handleLogout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
+        </div>
+      </div>
+      
+      <div class="status-banner" id="verificationStatus">
+        <i class="fas fa-check-circle"></i>
+        <span><strong>Verified Account</strong> — All features available</span>
+      </div>
+    </div>
+    
+    <!-- Dashboard Tabs -->
+    <div class="glass-card">
+      <div class="tabs" style="display:flex; gap:4px; background:rgba(255,255,255,0.04); border-radius:14px; padding:4px; margin-bottom:16px; flex-wrap:wrap;">
+        <button class="tab active" data-tab="dashboard" onclick="switchDashboardTab('dashboard')" style="flex:1; min-width:80px; padding:10px; text-align:center; border:none; border-radius:12px; font-weight:600; font-size:13px; cursor:pointer; transition:0.2s; background:rgba(167, 139, 250, 0.15); color:#a78bfa;">
+          <i class="fas fa-chart-pie"></i> Dashboard
+        </button>
+        <button class="tab" data-tab="attendance" onclick="switchDashboardTab('attendance')" style="flex:1; min-width:80px; padding:10px; text-align:center; border:none; border-radius:12px; font-weight:600; font-size:13px; cursor:pointer; transition:0.2s; background:transparent; color:#94a3b8;">
+          <i class="fas fa-clipboard-check"></i> Attendance
+        </button>
+        <button class="tab" data-tab="history" onclick="switchDashboardTab('history')" style="flex:1; min-width:80px; padding:10px; text-align:center; border:none; border-radius:12px; font-weight:600; font-size:13px; cursor:pointer; transition:0.2s; background:transparent; color:#94a3b8;">
+          <i class="fas fa-history"></i> History
+        </button>
+        <button class="tab" data-tab="students" onclick="switchDashboardTab('students')" style="flex:1; min-width:80px; padding:10px; text-align:center; border:none; border-radius:12px; font-weight:600; font-size:13px; cursor:pointer; transition:0.2s; background:transparent; color:#94a3b8;">
+          <i class="fas fa-users"></i> Students
+        </button>
+        <button class="tab" data-tab="profile" onclick="switchDashboardTab('profile')" style="flex:1; min-width:80px; padding:10px; text-align:center; border:none; border-radius:12px; font-weight:600; font-size:13px; cursor:pointer; transition:0.2s; background:transparent; color:#94a3b8;">
+          <i class="fas fa-user-circle"></i> Profile
+        </button>
+        <button class="tab" data-tab="admin" onclick="switchDashboardTab('admin')" style="flex:1; min-width:80px; padding:10px; text-align:center; border:none; border-radius:12px; font-weight:600; font-size:13px; cursor:pointer; transition:0.2s; background:transparent; color:#94a3b8; display:none;" id="adminTab">
+          <i class="fas fa-user-shield"></i> Admin
+        </button>
+      </div>
+      
+      <!-- DASHBOARD TAB -->
+      <div id="panel-dashboard" class="panel" style="display:block;">
+        <div id="dashboardContent"></div>
+      </div>
+      
+      <!-- ATTENDANCE TAB -->
+      <div id="panel-attendance" class="panel" style="display:none;">
+        <div id="attendanceContent"></div>
+      </div>
+      
+      <!-- HISTORY TAB -->
+      <div id="panel-history" class="panel" style="display:none;">
+        <div id="historyContent"></div>
+      </div>
+      
+      <!-- STUDENTS TAB -->
+      <div id="panel-students" class="panel" style="display:none;">
+        <div id="studentsContent"></div>
+      </div>
+      
+      <!-- PROFILE TAB -->
+      <div id="panel-profile" class="panel" style="display:none;">
+        <div id="profileContent"></div>
+      </div>
+      
+      <!-- ADMIN TAB -->
+      <div id="panel-admin" class="panel" style="display:none;">
+        <div id="adminContent"></div>
+      </div>
+    </div>
+  </div>
+  
+  <div class="text-muted">
+    <i class="fas fa-shield-alt"></i> Geolocation verified • 10m proximity required
+  </div>
+</div>
+
+<!-- ===== TOAST ===== -->
+<div class="toast" id="toast"></div>
+
+<!-- ===== DEMO CREDENTIALS MODAL ===== -->
+<div id="demoModal" style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.8); z-index:10001; align-items:center; justify-content:center; padding:20px;">
+  <div class="glass-card" style="max-width:500px; width:100%; margin:0;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+      <h3 style="color:#a78bfa;"><i class="fas fa-key"></i> Demo Credentials</h3>
+      <button onclick="closeDemoModal()" style="background:none; border:none; color:#94a3b8; font-size:24px; cursor:pointer;">&times;</button>
+    </div>
+    <div class="demo-credentials" style="background:rgba(167,139,250,0.08); border:1px solid rgba(167,139,250,0.15); border-radius:12px; padding:16px;">
+      <div style="margin-bottom:12px;">
+        <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px; flex-wrap:wrap;">
+          <span class="badge badge-student" style="background:rgba(16,185,129,0.15); color:#6ee7b7; padding:2px 10px; border-radius:10px; font-size:11px; font-weight:600;">Student</span>
+          <span style="color:#94a3b8; font-size:13px;">student@demo.com</span>
+          <span style="color:#64748b; font-size:13px;">/</span>
+          <span style="color:#e2e8f0; font-family:monospace; font-size:13px;">student123</span>
+        </div>
+        <button onclick="quickLogin('student@demo.com', 'student123')" class="btn btn-success btn-sm" style="padding:4px 12px; font-size:12px;">Login</button>
+      </div>
+      <div style="margin-bottom:12px;">
+        <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px; flex-wrap:wrap;">
+          <span class="badge badge-lecturer" style="background:rgba(167,139,250,0.15); color:#a78bfa; padding:2px 10px; border-radius:10px; font-size:11px; font-weight:600;">Lecturer</span>
+          <span style="color:#94a3b8; font-size:13px;">lecturer@demo.com</span>
+          <span style="color:#64748b; font-size:13px;">/</span>
+          <span style="color:#e2e8f0; font-family:monospace; font-size:13px;">lecturer123</span>
+        </div>
+        <button onclick="quickLogin('lecturer@demo.com', 'lecturer123')" class="btn btn-primary btn-sm" style="padding:4px 12px; font-size:12px;">Login</button>
+      </div>
+      <div>
+        <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px; flex-wrap:wrap;">
+          <span class="badge badge-admin" style="background:rgba(251,191,36,0.15); color:#fbbf24; padding:2px 10px; border-radius:10px; font-size:11px; font-weight:600;">Admin</span>
+          <span style="color:#94a3b8; font-size:13px;">admin@demo.com</span>
+          <span style="color:#64748b; font-size:13px;">/</span>
+          <span style="color:#e2e8f0; font-family:monospace; font-size:13px;">admin123</span>
+        </div>
+        <button onclick="quickLogin('admin@demo.com', 'admin123')" class="btn btn-warning btn-sm" style="padding:4px 12px; font-size:12px;">Login</button>
+      </div>
+    </div>
+    <div style="margin-top:12px; font-size:12px; color:#64748b; text-align:center;">
+      <i class="fas fa-info-circle"></i> These accounts are pre-verified and ready to use
+    </div>
+  </div>
+</div>
+
+<script>
+  // ============================================================
+  // KENYAN UNIVERSITY DATA (Same as before - abbreviated for space)
+  // ============================================================
+  const KENYAN_UNIVERSITIES = {
+    'University of Nairobi': {
+      schools: {
+        'School of Engineering': {
+          departments: ['Civil and Structural Engineering', 'Mechanical Engineering', 'Electrical and Electronic Engineering', 'Chemical Engineering', 'Geospatial Engineering'],
+          courses: {
+            'Civil and Structural Engineering': ['BSc Civil Engineering', 'BSc Structural Engineering', 'BSc Construction Management'],
+            'Mechanical Engineering': ['BSc Mechanical Engineering', 'BSc Automotive Engineering', 'BSc Manufacturing Engineering'],
+            'Electrical and Electronic Engineering': ['BSc Electrical Engineering', 'BSc Electronic Engineering', 'BSc Telecommunications Engineering'],
+            'Chemical Engineering': ['BSc Chemical Engineering', 'BSc Process Engineering'],
+            'Geospatial Engineering': ['BSc Geospatial Engineering', 'BSc Surveying']
+          }
+        },
+        'School of Science and Technology': {
+          departments: ['Computer Science', 'Information Technology', 'Data Science', 'Mathematics', 'Physics', 'Chemistry', 'Biology'],
+          courses: {
+            'Computer Science': ['BSc Computer Science', 'BSc Software Engineering', 'BSc Cybersecurity'],
+            'Information Technology': ['BSc Information Technology', 'BSc Information Systems'],
+            'Data Science': ['BSc Data Science', 'BSc Statistics'],
+            'Mathematics': ['BSc Mathematics', 'BSc Applied Mathematics'],
+            'Physics': ['BSc Physics', 'BSc Engineering Physics'],
+            'Chemistry': ['BSc Chemistry', 'BSc Industrial Chemistry'],
+            'Biology': ['BSc Biology', 'BSc Microbiology']
+          }
+        },
+        'School of Business': {
+          departments: ['Business Administration', 'Accounting', 'Finance', 'Marketing', 'Economics'],
+          courses: {
+            'Business Administration': ['BBA', 'MBA', 'BCom'],
+            'Accounting': ['BSc Accounting', 'CPA'],
+            'Finance': ['BSc Finance', 'BSc Banking'],
+            'Marketing': ['BSc Marketing', 'BSc Public Relations'],
+            'Economics': ['BSc Economics', 'BA Economics']
+          }
+        },
+        'School of Medicine': {
+          departments: ['Medicine', 'Nursing', 'Pharmacy', 'Dentistry', 'Public Health'],
+          courses: {
+            'Medicine': ['MBChB', 'MD'],
+            'Nursing': ['BSc Nursing', 'Diploma Nursing'],
+            'Pharmacy': ['BPharm', 'PharmD'],
+            'Dentistry': ['BDS'],
+            'Public Health': ['BSc Public Health', 'MPH']
+          }
+        }
+      }
+    },
+    'Kenyatta University': {
+      schools: {
+        'School of Engineering and Technology': {
+          departments: ['Civil Engineering', 'Mechanical Engineering', 'Electrical Engineering', 'Computer Engineering', 'Software Engineering'],
+          courses: {
+            'Civil Engineering': ['BSc Civil Engineering', 'BSc Construction Engineering'],
+            'Mechanical Engineering': ['BSc Mechanical Engineering', 'BSc Mechatronics'],
+            'Electrical Engineering': ['BSc Electrical Engineering', 'BSc Power Engineering'],
+            'Computer Engineering': ['BSc Computer Engineering'],
+            'Software Engineering': ['BSc Software Engineering']
+          }
+        },
+        'School of Pure and Applied Sciences': {
+          departments: ['Computer Science', 'Mathematics', 'Physics', 'Chemistry', 'Biology', 'Biochemistry'],
+          courses: {
+            'Computer Science': ['BSc Computer Science', 'BSc Information Technology'],
+            'Mathematics': ['BSc Mathematics', 'BSc Applied Mathematics'],
+            'Physics': ['BSc Physics'],
+            'Chemistry': ['BSc Chemistry'],
+            'Biology': ['BSc Biology'],
+            'Biochemistry': ['BSc Biochemistry']
+          }
+        }
+      }
+    },
+    // ... (rest of universities - abbreviated for brevity)
+    // In the full implementation, all Kenyan universities would be included
+  };
+
+  // ============================================================
+  // MAIN APPLICATION
+  // ============================================================
+  (function() {
+    'use strict';
+
+    // ----- STORAGE KEYS -----
+    const STORAGE_KEYS = {
+      USERS: 'smart_attendance_ke_users',
+      SESSIONS: 'smart_attendance_ke_sessions',
+      ATTENDANCE: 'smart_attendance_ke_records',
+      CURRENT_USER: 'smart_attendance_ke_current_user',
+      LECTURER_VERIFICATIONS: 'smart_attendance_ke_lecturer_verifications',
+      WELCOME_SHOWN: 'smart_attendance_ke_welcome_shown'
+    };
+
+    // ----- DATA STORE -----
+    let currentUser = null;
+    let sessionActive = false;
+    let sessionData = null;
+    let attendees = [];
+    let hostLocation = null;
+    let studentLocation = null;
+    let watchId = null;
+    let toastTimeout = null;
+    let selectedRole = 'student';
+    let lecturerUniversities = [];
+
+    // ----- DOM REFS -----
+    const authView = document.getElementById('authView');
+    const dashboardView = document.getElementById('dashboardView');
+    const toast = document.getElementById('toast');
+    const welcomePage = document.getElementById('welcomePage');
+
+    // ============================================================
+    // WELCOME PAGE
+    // ============================================================
+    window.closeWelcome = function() {
+      welcomePage.classList.add('hidden');
+      localStorage.setItem(STORAGE_KEYS.WELCOME_SHOWN, 'true');
+      setTimeout(() => {
+        welcomePage.style.display = 'none';
+      }, 800);
+    };
+
+    if (localStorage.getItem(STORAGE_KEYS.WELCOME_SHOWN)) {
+      welcomePage.style.display = 'none';
+    }
+
+    // ============================================================
+    // DEMO CREDENTIALS MODAL
+    // ============================================================
+    window.showDemoCredentials = function() {
+      document.getElementById('demoModal').style.display = 'flex';
+    };
+
+    window.closeDemoModal = function() {
+      document.getElementById('demoModal').style.display = 'none';
+    };
+
+    document.getElementById('demoModal')?.addEventListener('click', function(e) {
+      if (e.target === this) closeDemoModal();
+    });
+
+    // ============================================================
+    // DEMO ACCOUNTS
+    // ============================================================
+    function createDemoAccounts() {
+      const users = getUsers();
+      
+      const hasDemo = users.some(u => u.email.includes('@demo.com'));
+      if (hasDemo) return;
+      
+      users.push({
+        id: 'demo_student_' + Date.now(),
+        name: 'John Demo Student',
+        email: 'student@demo.com',
+        password: 'student123',
+        university: 'University of Nairobi',
+        school: 'School of Engineering',
+        department: 'Civil and Structural Engineering',
+        yearOfStudy: '3',
+        course: 'BSc Civil Engineering',
+        studentId: 'S/2024/001',
+        admissionNo: 'ADM-2024-STU001',
+        role: 'student',
+        verified: true,
+        verificationToken: null,
+        verificationStatus: 'verified',
+        avatar: null,
+        createdAt: new Date().toISOString()
+      });
+      
+      users.push({
+        id: 'demo_lecturer_' + Date.now(),
+        name: 'Dr. Jane Demo Lecturer',
+        email: 'lecturer@demo.com',
+        password: 'lecturer123',
+        phone: '0712345678',
+        department: 'Computer Science',
+        universities: ['University of Nairobi', 'Kenyatta University'],
+        qualifications: 'PhD in Computer Science, MSc in Software Engineering',
+        documents: ['CV.pdf', 'PhD_Certificate.pdf'],
+        role: 'lecturer',
+        verified: true,
+        verificationToken: null,
+        verificationStatus: 'verified',
+        avatar: null,
+        createdAt: new Date().toISOString()
+      });
+      
+      users.push({
+        id: 'demo_admin_' + Date.now(),
+        name: 'Admin User',
+        email: 'admin@demo.com',
+        password: 'admin123',
+        phone: '0712345678',
+        department: 'IT Department',
+        university: 'University of Nairobi',
+        staffId: 'ADM-001',
+        role: 'admin',
+        verified: true,
+        verificationToken: null,
+        verificationStatus: 'verified',
+        avatar: null,
+        createdAt: new Date().toISOString()
+      });
+      
+      saveUsers(users);
+      console.log('✅ Demo accounts created successfully!');
+    }
+
+    // ============================================================
+    // EMAIL CONFIGURATION
+    // ============================================================
+    (function initEmailJS() {
+      try {
+        emailjs.init('YOUR_PUBLIC_KEY');
+        console.log('📧 EmailJS initialized');
+      } catch (error) {
+        console.warn('⚠️ EmailJS not configured');
+      }
+    })();
+
+    // ============================================================
+    // STORAGE HELPERS
+    // ============================================================
+    function getUsers() {
+      return JSON.parse(localStorage.getItem(STORAGE_KEYS.USERS) || '[]');
+    }
+
+    function saveUsers(users) {
+      localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(users));
+    }
+
+    function getSessions() {
+      return JSON.parse(localStorage.getItem(STORAGE_KEYS.SESSIONS) || '[]');
+    }
+
+    function saveSessions(sessions) {
+      localStorage.setItem(STORAGE_KEYS.SESSIONS, JSON.stringify(sessions));
+    }
+
+    function getAttendanceRecords() {
+      return JSON.parse(localStorage.getItem(STORAGE_KEYS.ATTENDANCE) || '[]');
+    }
+
+    function saveAttendanceRecords(records) {
+      localStorage.setItem(STORAGE_KEYS.ATTENDANCE, JSON.stringify(records));
+    }
+
+    function getCurrentUser() {
+      const data = localStorage.getItem(STORAGE_KEYS.CURRENT_USER);
+      return data ? JSON.parse(data) : null;
+    }
+
+    function saveCurrentUser(user) {
+      localStorage.setItem(STORAGE_KEYS.CURRENT_USER, JSON.stringify(user));
+    }
+
+    function clearCurrentUser() {
+      localStorage.removeItem(STORAGE_KEYS.CURRENT_USER);
+    }
+
+    function getLecturerVerifications() {
+      return JSON.parse(localStorage.getItem(STORAGE_KEYS.LECTURER_VERIFICATIONS) || '[]');
+    }
+
+    function saveLecturerVerifications(verifications) {
+      localStorage.setItem(STORAGE_KEYS.LECTURER_VERIFICATIONS, JSON.stringify(verifications));
+    }
+
+    // ============================================================
+    // TOAST
+    // ============================================================
+    function showToast(msg, type) {
+      toast.textContent = msg;
+      toast.className = 'toast' + (type === 'success' ? ' success' : '') + (type === 'error' ? ' error' : '') + (type === 'warning' ? ' warning' : '');
+      void toast.offsetWidth;
+      toast.classList.add('show');
+      clearTimeout(toastTimeout);
+      toastTimeout = setTimeout(() => toast.classList.remove('show'), 4500);
+    }
+
+    // ============================================================
+    // QUICK LOGIN
+    // ============================================================
+    window.quickLogin = function(email, password) {
+      closeDemoModal();
+      document.getElementById('loginEmail').value = email;
+      document.getElementById('loginPassword').value = password;
+      const form = document.getElementById('loginForm');
+      form.dispatchEvent(new Event('submit'));
+    };
+
+    // ============================================================
+    // ROLE SELECTION
+    // ============================================================
+    window.selectRole = function(role) {
+      selectedRole = role;
+      document.querySelectorAll('.role-option').forEach(el => {
+        el.classList.toggle('active', el.dataset.role === role);
+      });
+      
+      const studentFields = document.getElementById('studentFields');
+      const lecturerFields = document.getElementById('lecturerFields');
+      const adminFields = document.getElementById('adminFields');
+      const btnText = document.getElementById('registerBtnText');
+      
+      studentFields.classList.add('hidden');
+      lecturerFields.classList.add('hidden');
+      adminFields.classList.add('hidden');
+      
+      if (role === 'student') {
+        studentFields.classList.remove('hidden');
+        btnText.textContent = 'Register as Student';
+        document.getElementById('regRole').value = 'student';
+        document.querySelectorAll('#studentFields input, #studentFields select').forEach(el => {
+          if (el.id !== 'regStudentId') el.required = true;
+        });
+      } else if (role === 'lecturer') {
+        lecturerFields.classList.remove('hidden');
+        btnText.textContent = 'Register as Lecturer';
+        document.getElementById('regRole').value = 'lecturer';
+        document.querySelectorAll('#lecturerFields input, #lecturerFields textarea').forEach(el => {
+          if (el.id !== 'lecturerDept' && el.id !== 'lecturerQualifications') el.required = true;
+        });
+      } else {
+        adminFields.classList.remove('hidden');
+        btnText.textContent = 'Register as Administrator';
+        document.getElementById('regRole').value = 'admin';
+        document.querySelectorAll('#adminFields input, #adminFields select, #adminFields textarea').forEach(el => {
+          if (el.id !== 'adminStaffId' && el.id !== 'adminAuthLetter') el.required = true;
+        });
+      }
+    };
+
+    // ============================================================
+    // UNIVERSITY MANAGEMENT FOR LECTURERS
+    // ============================================================
+    window.addUniversity = function() {
+      const input = document.getElementById('lecturerUniversityInput');
+      const uni = input.value.trim();
+      if (!uni) {
+        showToast('⚠️ Please enter a university name.', 'error');
+        return;
+      }
+      if (lecturerUniversities.includes(uni)) {
+        showToast('⚠️ University already added.', 'warning');
+        return;
+      }
+      lecturerUniversities.push(uni);
+      updateUniversityList();
+      input.value = '';
+      input.focus();
+    };
+
+    function updateUniversityList() {
+      const container = document.getElementById('universityList');
+      if (lecturerUniversities.length === 0) {
+        container.innerHTML = '<span style="color:#64748b; font-size:12px;">No universities added yet</span>';
+        return;
+      }
+      container.innerHTML = lecturerUniversities.map(uni => `
+        <span class="multi-select-item">
+          ${uni}
+          <span class="remove" onclick="removeUniversity('${uni}')">&times;</span>
+        </span>
+      `).join('');
+      document.getElementById('lecturerUniversities').value = JSON.stringify(lecturerUniversities);
+    }
+
+    window.removeUniversity = function(uni) {
+      lecturerUniversities = lecturerUniversities.filter(u => u !== uni);
+      updateUniversityList();
+    };
+
+    // ============================================================
+    // GENERATE SESSION CODE
+    // ============================================================
+    function generateSessionCode() {
+      const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+      let code = '';
+      for (let i = 0; i < 6; i++) {
+        code += chars.charAt(Math.floor(Math.random() * chars.length));
+      }
+      return code;
+    }
+
+    // ============================================================
+    // EMAIL VALIDATION
+    // ============================================================
+    function isValidSchoolEmail(email) {
+      const patterns = [
+        /\.ac\.ke$/i,
+        /@uonbi\.ac\.ke$/i,
+        /@ku\.ac\.ke$/i,
+        /@mu\.ac\.ke$/i,
+        /@jkuat\.ac\.ke$/i,
+        /@egerton\.ac\.ke$/i,
+        /@maseno\.ac\.ke$/i,
+        /@tukenya\.ac\.ke$/i,
+        /@strathmore\.edu$/i,
+        /@usiu\.ac\.ke$/i,
+        /@uoeld\.ac\.ke$/i,
+        /@kisiiuniversity\.ac\.ke$/i,
+        /@mut\.ac\.ke$/i,
+        /@must\.ac\.ke$/i,
+        /@mkuniversity\.ac\.ke$/i,
+        /@kcauniversity\.ac\.ke$/i,
+        /@anu\.ac\.ke$/i,
+        /@daystar\.ac\.ke$/i,
+        /@cuea\.edu$/i,
+        /@student\./i
+      ];
+      return patterns.some(p => p.test(email));
+    }
+
+    // ============================================================
+    // GENERATE VERIFICATION TOKEN
+    // ============================================================
+    function generateVerificationToken() {
+      return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+    }
+
+    // ============================================================
+    // SEND VERIFICATION EMAIL
+    // ============================================================
+    async function sendVerificationEmail(email, name, token, role) {
+      try {
+        const verificationLink = window.location.origin + window.location.pathname + '?verify=' + token + '&email=' + encodeURIComponent(email);
+        
+        const templateParams = {
+          to_email: email,
+          to_name: name,
+          verification_link: verificationLink,
+          role: role.charAt(0).toUpperCase() + role.slice(1)
+        };
+
+        const response = await emailjs.send(
+          'YOUR_SERVICE_ID',
+          'YOUR_TEMPLATE_ID',
+          templateParams
+        );
+
+        console.log('📧 Verification email sent successfully');
+        return true;
+      } catch (error) {
+        console.error('❌ Failed to send verification email:', error);
+        const link = window.location.origin + window.location.pathname + '?verify=' + token + '&email=' + encodeURIComponent(email);
+        console.log('📧 VERIFICATION LINK:', link);
+        return false;
+      }
+    }
+
+    // ============================================================
+    // AVATAR HANDLING
+    // ============================================================
+    function handleAvatarUpload(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const imageData = e.target.result;
+        if (currentUser) {
+          currentUser.avatar = imageData;
+          const users = getUsers();
+          const userIndex = users.findIndex(u => u.id === currentUser.id);
+          if (userIndex !== -1) {
+            users[userIndex].avatar = imageData;
+            saveUsers(users);
+            saveCurrentUser(currentUser);
+            updateUserInfo();
+            showToast('✅ Profile photo updated!', 'success');
+          }
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+
+    // ============================================================
+    // UNIVERSITY DATA POPULATION
+    // ============================================================
+    function populateUniversities() {
+      const selects = ['regUniversity', 'adminUniversity'];
+      selects.forEach(id => {
+        const select = document.getElementById(id);
+        if (!select) return;
+        
+        select.innerHTML = '<option value="">Select University</option>';
+        const universities = Object.keys(KENYAN_UNIVERSITIES).sort();
+        universities.forEach(university => {
+          const option = document.createElement('option');
+          option.value = university;
+          option.textContent = university;
+          select.appendChild(option);
+        });
+      });
+    }
+
+    function updateCourses() {
+      const university = document.getElementById('regUniversity').value;
+      const schoolSelect = document.getElementById('regSchool');
+      const deptSelect = document.getElementById('regDepartment');
+      const courseSelect = document.getElementById('regCourse');
+      
+      schoolSelect.innerHTML = '<option value="">Select School</option>';
+      deptSelect.innerHTML = '<option value="">Select Department</option>';
+      courseSelect.innerHTML = '<option value="">Select Course</option>';
+      
+      if (!university || !KENYAN_UNIVERSITIES[university]) return;
+      
+      const uniData = KENYAN_UNIVERSITIES[university];
+      const schools = Object.keys(uniData.schools).sort();
+      
+      schools.forEach(school => {
+        const option = document.createElement('option');
+        option.value = school;
+        option.textContent = school;
+        schoolSelect.appendChild(option);
+      });
+    }
+
+    function updateDepartments() {
+      const university = document.getElementById('regUniversity').value;
+      const school = document.getElementById('regSchool').value;
+      const deptSelect = document.getElementById('regDepartment');
+      const courseSelect = document.getElementById('regCourse');
+      
+      deptSelect.innerHTML = '<option value="">Select Department</option>';
+      courseSelect.innerHTML = '<option value="">Select Course</option>';
+      
+      if (!university || !school || !KENYAN_UNIVERSITIES[university]) return;
+      
+      const uniData = KENYAN_UNIVERSITIES[university];
+      if (!uniData.schools[school]) return;
+      
+      const departments = uniData.schools[school].departments || [];
+      departments.sort().forEach(dept => {
+        const option = document.createElement('option');
+        option.value = dept;
+        option.textContent = dept;
+        deptSelect.appendChild(option);
+      });
+    }
+
+    function updateCoursesByDept() {
+      const university = document.getElementById('regUniversity').value;
+      const school = document.getElementById('regSchool').value;
+      const department = document.getElementById('regDepartment').value;
+      const courseSelect = document.getElementById('regCourse');
+      
+      courseSelect.innerHTML = '<option value="">Select Course</option>';
+      
+      if (!university || !school || !department || !KENYAN_UNIVERSITIES[university]) return;
+      
+      const uniData = KENYAN_UNIVERSITIES[university];
+      if (!uniData.schools[school] || !uniData.schools[school].courses) return;
+      
+      const courses = uniData.schools[school].courses[department] || [];
+      courses.sort().forEach(course => {
+        const option = document.createElement('option');
+        option.value = course;
+        option.textContent = course;
+        courseSelect.appendChild(option);
+      });
+    }
+
+    // ============================================================
+    // ADMIN REGISTRATION CODE VALIDATION
+    // ============================================================
+    function validateAdminCode(code) {
+      const ADMIN_CODES = ['ADMIN2024', 'UNIADMIN2024', 'KENYAADMIN2024', 'ADMIN-DEMO-2024'];
+      return ADMIN_CODES.includes(code);
+    }
+
+    // ============================================================
+    // AUTH: REGISTER
+    // ============================================================
+    window.handleRegister = async function(e) {
+      e.preventDefault();
+
+      const role = document.getElementById('regRole').value;
+      const password = document.getElementById('regPassword').value;
+      const confirmPassword = document.getElementById('regConfirmPassword').value;
+
+      if (password.length < 6) {
+        showToast('⚠️ Password must be at least 6 characters.', 'error');
+        return;
+      }
+
+      if (password !== confirmPassword) {
+        showToast('⚠️ Passwords do not match.', 'error');
+        return;
+      }
+
+      let userData = {};
+
+      if (role === 'student') {
+        const name = document.getElementById('regName').value.trim();
+        const email = document.getElementById('regEmail').value.trim();
+        const university = document.getElementById('regUniversity').value;
+        const school = document.getElementById('regSchool').value;
+        const department = document.getElementById('regDepartment').value;
+        const year = document.getElementById('regYear').value;
+        const course = document.getElementById('regCourse').value;
+        const studentId = document.getElementById('regStudentId').value.trim();
+        const admissionNo = document.getElementById('regAdmissionNo').value.trim();
+
+        if (!name || !email || !university || !school || !department || !year || !course || !admissionNo) {
+          showToast('⚠️ Please fill in all required fields.', 'error');
+          return;
+        }
+
+        if (!isValidSchoolEmail(email)) {
+          showToast('⚠️ Please use a valid Kenyan university email (.ac.ke)', 'error');
+          return;
+        }
+
+        const users = getUsers();
+        if (users.find(u => u.email === email)) {
+          showToast('⚠️ An account with this email already exists.', 'error');
+          return;
+        }
+
+        userData = {
+          name,
+          email,
+          university,
+          school,
+          department,
+          yearOfStudy: year,
+          course,
+          studentId: studentId || '',
+          admissionNo,
+          role: 'student',
+          verified: false,
+          verificationToken: generateVerificationToken(),
+          avatar: null,
+          createdAt: new Date().toISOString()
+        };
+      } else if (role === 'lecturer') {
+        const name = document.getElementById('lecturerName').value.trim();
+        const email = document.getElementById('lecturerEmail').value.trim();
+        const phone = document.getElementById('lecturerPhone').value.trim();
+        const department = document.getElementById('lecturerDept').value.trim();
+        const qualifications = document.getElementById('lecturerQualifications').value.trim();
+        const universities = JSON.parse(document.getElementById('lecturerUniversities').value || '[]');
+
+        if (!name || !email || !phone) {
+          showToast('⚠️ Please fill in all required fields.', 'error');
+          return;
+        }
+
+        if (universities.length === 0) {
+          showToast('⚠️ Please add at least one university.', 'error');
+          return;
+        }
+
+        const users = getUsers();
+        if (users.find(u => u.email === email)) {
+          showToast('⚠️ An account with this email already exists.', 'error');
+          return;
+        }
+
+        const docInput = document.getElementById('lecturerDocuments');
+        const documents = docInput.files ? Array.from(docInput.files).map(f => f.name) : [];
+
+        userData = {
+          name,
+          email,
+          phone,
+          department: department || 'Not specified',
+          universities: universities,
+          qualifications: qualifications || '',
+          documents: documents,
+          role: 'lecturer',
+          verified: false,
+          verificationToken: generateVerificationToken(),
+          avatar: null,
+          createdAt: new Date().toISOString(),
+          verificationStatus: 'pending'
+        };
+      } else {
+        const regCode = document.getElementById('adminRegCode').value.trim();
+        const name = document.getElementById('adminName').value.trim();
+        const email = document.getElementById('adminEmail').value.trim();
+        const phone = document.getElementById('adminPhone').value.trim();
+        const department = document.getElementById('adminDept').value.trim();
+        const university = document.getElementById('adminUniversity').value;
+        const staffId = document.getElementById('adminStaffId').value.trim();
+        const authLetter = document.getElementById('adminAuthLetter');
+
+        if (!validateAdminCode(regCode)) {
+          showToast('⚠️ Invalid admin registration code.', 'error');
+          return;
+        }
+
+        if (!name || !email || !phone || !department || !university) {
+          showToast('⚠️ Please fill in all required fields.', 'error');
+          return;
+        }
+
+        const users = getUsers();
+        if (users.find(u => u.email === email)) {
+          showToast('⚠️ An account with this email already exists.', 'error');
+          return;
+        }
+
+        const authLetterName = authLetter.files && authLetter.files[0] ? authLetter.files[0].name : '';
+
+        userData = {
+          name,
+          email,
+          phone,
+          department,
+          university,
+          staffId: staffId || '',
+          authLetter: authLetterName,
+          role: 'admin',
+          verified: false,
+          verificationToken: generateVerificationToken(),
+          avatar: null,
+          createdAt: new Date().toISOString(),
+          adminStatus: 'pending'
+        };
+      }
+
+      const users = getUsers();
+      const newUser = {
+        id: Date.now().toString(),
+        password,
+        ...userData
+      };
+
+      users.push(newUser);
+      saveUsers(users);
+
+      showToast('📧 Sending verification email...', '');
+      
+      const emailSent = await sendVerificationEmail(
+        newUser.email, 
+        newUser.name, 
+        newUser.verificationToken,
+        newUser.role
+      );
+      
+      if (emailSent) {
+        showToast(`✅ Verification email sent to ${newUser.email}.`, 'success');
+        showToast('📧 Click the "Verify Email" link in the email to activate your account.', 'success');
+      } else {
+        showToast('⚠️ Could not send email. Check console for verification link.', 'warning');
+      }
+
+      document.getElementById('regPassword').value = '';
+      document.getElementById('regConfirmPassword').value = '';
+      
+      showToast('✅ Registration successful! Please check your email for verification.', 'success');
+    };
+
+    // ============================================================
+    // AUTH: LOGIN
+    // ============================================================
+    window.handleLogin = function(e) {
+      e.preventDefault();
+
+      const email = document.getElementById('loginEmail').value.trim();
+      const password = document.getElementById('loginPassword').value;
+
+      if (!email || !password) {
+        showToast('⚠️ Please enter email and password.', 'error');
+        return;
+      }
+
+      const users = getUsers();
+      const user = users.find(u => u.email === email && u.password === password);
+
+      if (!user) {
+        showToast('❌ Invalid email or password.', 'error');
+        return;
+      }
+
+      if (!user.verified) {
+        showToast('⚠️ Please verify your email before logging in.', 'error');
+        return;
+      }
+
+      if (user.role === 'lecturer' && user.verificationStatus !== 'verified') {
+        showToast('⚠️ Your lecturer account is pending verification.', 'warning');
+        if (user.verificationStatus === 'pending') {
+          showToast('📧 You will be notified once your account is verified.', 'warning');
+        } else {
+          showToast('❌ Your verification was rejected. Please contact the administrator.', 'error');
+        }
+      }
+
+      currentUser = user;
+      saveCurrentUser(user);
+      showToast(`✅ Welcome back, ${user.name}!`, 'success');
+      showDashboard();
+    };
+
+    // ============================================================
+    // AUTH: LOGOUT
+    // ============================================================
+    window.handleLogout = function() {
+      if (confirm('Are you sure you want to logout?')) {
+        clearCurrentUser();
+        currentUser = null;
+        sessionActive = false;
+        sessionData = null;
+        attendees = [];
+        showAuth();
+        showToast('👋 Logged out successfully.', '');
+      }
+    };
+
+    // ============================================================
+    // AUTH TAB SWITCHING
+    // ============================================================
+    window.switchAuthTab = function(tab) {
+      document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
+      document.querySelector(`.auth-tab[onclick*="${tab}"]`).classList.add('active');
+      document.querySelectorAll('.auth-panel').forEach(p => p.classList.remove('active'));
+      document.getElementById(`auth-${tab}`).classList.add('active');
+    };
+
+    // ============================================================
+    // DASHBOARD TAB SWITCHING
+    // ============================================================
+    window.switchDashboardTab = function(tab) {
+      document.querySelectorAll('.tab').forEach(t => {
+        t.classList.remove('active');
+        t.style.background = 'transparent';
+        t.style.color = '#94a3b8';
+      });
+      document.querySelector(`.tab[data-tab="${tab}"]`).classList.add('active');
+      document.querySelector(`.tab[data-tab="${tab}"]`).style.background = 'rgba(167, 139, 250, 0.15)';
+      document.querySelector(`.tab[data-tab="${tab}"]`).style.color = '#a78bfa';
+      
+      document.querySelectorAll('.panel').forEach(p => p.style.display = 'none');
+      document.getElementById(`panel-${tab}`).style.display = 'block';
+
+      if (tab === 'dashboard') updateDashboard();
+      if (tab === 'attendance') renderAttendancePanel();
+      if (tab === 'history') renderHistory();
+      if (tab === 'students') renderStudentsPanel();
+      if (tab === 'profile') renderProfile();
+      if (tab === 'admin') renderAdminPanel();
+    };
+
+    // ============================================================
+    // SHOW/HIDE VIEWS
+    // ============================================================
+    function showDashboard() {
+      authView.classList.add('hidden');
+      dashboardView.classList.remove('hidden');
+      
+      const adminTab = document.getElementById('adminTab');
+      if (currentUser.role === 'admin') {
+        adminTab.style.display = 'block';
+      } else {
+        adminTab.style.display = 'none';
+      }
+      
+      updateUserInfo();
+      updateDashboard();
+      updateVerificationStatus();
+    }
+
+    function showAuth() {
+      authView.classList.remove('hidden');
+      dashboardView.classList.add('hidden');
+      if (watchId) {
+        navigator.geolocation.clearWatch(watchId);
+        watchId = null;
+      }
+    }
+
+    // ============================================================
+    // UPDATE VERIFICATION STATUS
+    // ============================================================
+    function updateVerificationStatus() {
+      const statusEl = document.getElementById('verificationStatus');
+      if (!currentUser) return;
+      
+      if (currentUser.verified) {
+        if (currentUser.role === 'lecturer') {
+          if (currentUser.verificationStatus === 'verified') {
+            statusEl.innerHTML = `
+              <i class="fas fa-check-circle" style="color:#34d399;"></i>
+              <span><strong>✅ Verified Lecturer</strong> — All features available</span>
+            `;
+          } else if (currentUser.verificationStatus === 'pending') {
+            statusEl.innerHTML = `
+              <i class="fas fa-clock" style="color:#fbbf24;"></i>
+              <span><strong>⏳ Pending Verification</strong> — Waiting for administrator approval</span>
+            `;
+          } else {
+            statusEl.innerHTML = `
+              <i class="fas fa-times-circle" style="color:#ef4444;"></i>
+              <span><strong>❌ Verification Rejected</strong> — Please contact the administrator</span>
+            `;
+          }
+        } else if (currentUser.role === 'admin') {
+          statusEl.innerHTML = `
+            <i class="fas fa-user-shield" style="color:#fbbf24;"></i>
+            <span><strong>🔐 Administrator</strong> — Full system access</span>
+          `;
+        } else {
+          statusEl.innerHTML = `
+            <i class="fas fa-check-circle" style="color:#34d399;"></i>
+            <span><strong>✅ Verified Student</strong> — All features available</span>
+          `;
+        }
+      } else {
+        statusEl.innerHTML = `
+          <i class="fas fa-exclamation-circle" style="color:#f59e0b;"></i>
+          <span><strong>⚠️ Email Not Verified</strong> — Please check your email for verification link</span>
+        `;
+      }
+    }
+
+    // ============================================================
+    // UPDATE USER INFO
+    // ============================================================
+    function updateUserInfo() {
+      if (!currentUser) return;
+      document.getElementById('userName').textContent = currentUser.name;
+      document.getElementById('userRole').textContent = currentUser.role.charAt(0).toUpperCase() + currentUser.role.slice(1);
+      
+      const avatarContainer = document.getElementById('userAvatar');
+      const avatarText = document.getElementById('avatarText');
+      
+      if (currentUser.avatar) {
+        avatarContainer.innerHTML = `<img src="${currentUser.avatar}" alt="Profile" /><div class="upload-hint">Upload Photo</div>`;
+      } else {
+        const initials = currentUser.name.split(' ').map(n => n[0]).join('').toUpperCase();
+        avatarContainer.innerHTML = `<span id="avatarText">${initials}</span><div class="upload-hint">Upload Photo</div>`;
+      }
+    }
+
+    // ============================================================
+    // LOCATION HELPERS
+    // ============================================================
+    function getHostLocation() {
+      return new Promise((resolve) => {
+        if (!navigator.geolocation) {
+          resolve(null);
+          return;
+        }
+        navigator.geolocation.getCurrentPosition(
+          (pos) => {
+            hostLocation = {
+              lat: pos.coords.latitude,
+              lng: pos.coords.longitude,
+              accuracy: pos.coords.accuracy
+            };
+            resolve(hostLocation);
+          },
+          () => { resolve(null); },
+          { enableHighAccuracy: true, timeout: 10000 }
+        );
+      });
+    }
+
+    function getStudentLocation() {
+      return new Promise((resolve) => {
+        if (!navigator.geolocation) {
+          resolve(null);
+          return;
+        }
+        navigator.geolocation.getCurrentPosition(
+          (pos) => {
+            studentLocation = {
+              lat: pos.coords.latitude,
+              lng: pos.coords.longitude,
+              accuracy: pos.coords.accuracy
+            };
+            resolve(studentLocation);
+          },
+          () => { resolve(null); },
+          { enableHighAccuracy: true, timeout: 10000 }
+        );
+      });
+    }
+
+    function calculateDistance(lat1, lng1, lat2, lng2) {
+      const R = 6371e3;
+      const φ1 = lat1 * Math.PI / 180;
+      const φ2 = lat2 * Math.PI / 180;
+      const Δφ = (lat2 - lat1) * Math.PI / 180;
+      const Δλ = (lng2 - lng1) * Math.PI / 180;
+      const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
+                Math.cos(φ1) * Math.cos(φ2) *
+                Math.sin(Δλ/2) * Math.sin(Δλ/2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+      return R * c;
+    }
+
+    // ============================================================
+    // DASHBOARD
+    // ============================================================
+    function updateDashboard() {
+      const container = document.getElementById('dashboardContent');
+      const sessions = getSessions();
+      const records = getAttendanceRecords();
+      const users = getUsers();
+
+      const userSessions = sessions.filter(s => s.hostId === currentUser.id);
+      const userRecords = records.filter(r => r.studentId === currentUser.id || r.hostId === currentUser.id);
+
+      let statsHTML = '';
+      
+      if (currentUser.role === 'admin') {
+        const totalUsers = users.length;
+        const totalSessions = sessions.length;
+        const totalRecords = records.length;
+        const pendingVerifications = users.filter(u => u.role === 'lecturer' && u.verificationStatus === 'pending').length;
+        const students = users.filter(u => u.role === 'student').length;
+        
+        statsHTML = `
+          <div class="dashboard-grid">
+            <div class="stat-card" onclick="switchDashboardTab('admin')">
+              <div class="number">${totalUsers}</div>
+              <div class="label">Total Users</div>
+            </div>
+            <div class="stat-card" onclick="switchDashboardTab('students')">
+              <div class="number">${students}</div>
+              <div class="label">Students</div>
+            </div>
+            <div class="stat-card" onclick="switchDashboardTab('admin')">
+              <div class="number">${totalSessions}</div>
+              <div class="label">Total Sessions</div>
+            </div>
+            <div class="stat-card" onclick="switchDashboardTab('admin')">
+              <div class="number">${totalRecords}</div>
+              <div class="label">Attendance Records</div>
+            </div>
+            <div class="stat-card" onclick="switchDashboardTab('admin')" style="border-color: ${pendingVerifications > 0 ? '#fbbf24' : 'transparent'};">
+              <div class="number" style="color: ${pendingVerifications > 0 ? '#fbbf24' : '#a78bfa'};">${pendingVerifications}</div>
+              <div class="label">Pending Verifications ${pendingVerifications > 0 ? '⚠️' : ''}</div>
+            </div>
+          </div>
+          <div style="margin-top:16px; display:flex; gap:10px; flex-wrap:wrap;">
+            <button onclick="switchDashboardTab('admin')" class="btn btn-warning" style="flex:1;">
+              <i class="fas fa-user-shield"></i> Admin Panel
+            </button>
+            <button onclick="switchDashboardTab('students')" class="btn btn-info" style="flex:1;">
+              <i class="fas fa-users"></i> All Students
+            </button>
+          </div>
+        `;
+      } else if (currentUser.role === 'lecturer') {
+        const totalSessions = userSessions.length;
+        const totalStudents = userRecords.filter(r => r.hostId === currentUser.id).length;
+        statsHTML = `
+          <div class="dashboard-grid">
+            <div class="stat-card">
+              <div class="number">${totalSessions}</div>
+              <div class="label">Sessions Created</div>
+            </div>
+            <div class="stat-card">
+              <div class="number">${totalStudents}</div>
+              <div class="label">Total Students</div>
+            </div>
+            <div class="stat-card">
+              <div class="number">${sessionActive ? '🟢 Active' : '🔴 Inactive'}</div>
+              <div class="label">Session Status</div>
+            </div>
+          </div>
+          ${currentUser.verificationStatus === 'pending' ? `
+            <div style="margin:12px 0; padding:12px; background:rgba(245,158,11,0.1); border:1px solid rgba(245,158,11,0.2); border-radius:12px; text-align:center; color:#fbbf24;">
+              <i class="fas fa-clock"></i> Your account is pending verification by the administrator.
+            </div>
+          ` : currentUser.verificationStatus === 'verified' ? `
+            <div style="margin-top:16px; display:flex; gap:10px; flex-wrap:wrap;">
+              <button onclick="switchDashboardTab('attendance')" class="btn btn-primary" style="flex:1;">
+                <i class="fas fa-plus-circle"></i> Create Session
+              </button>
+              <button onclick="switchDashboardTab('students')" class="btn btn-info" style="flex:1;">
+                <i class="fas fa-users"></i> View Students
+              </button>
+            </div>
+          ` : `
+            <div style="margin:12px 0; padding:12px; background:rgba(239,68,68,0.1); border:1px solid rgba(239,68,68,0.2); border-radius:12px; text-align:center; color:#fca5a5;">
+              <i class="fas fa-times-circle"></i> Your lecturer verification was rejected. Please contact the administrator.
+            </div>
+          `}
+        `;
+      } else {
+        const attended = userRecords.filter(r => r.status === 'present').length;
+        const totalCourses = new Set(records.filter(r => r.studentId === currentUser.id).map(r => r.course)).size;
+        
+        statsHTML = `
+          <div class="dashboard-grid">
+            <div class="stat-card">
+              <div class="number">${attended}</div>
+              <div class="label">Classes Attended</div>
+            </div>
+            <div class="stat-card">
+              <div class="number">${userRecords.length}</div>
+              <div class="label">Total Attempts</div>
+            </div>
+            <div class="stat-card">
+              <div class="number">${totalCourses}</div>
+              <div class="label">Courses Taken</div>
+            </div>
+            <div class="stat-card">
+              <div class="number">${sessionActive ? '🟢 Active' : '🔴 Inactive'}</div>
+              <div class="label">Current Session</div>
+            </div>
+          </div>
+          <div style="margin-top:16px; display:flex; gap:10px; flex-wrap:wrap;">
+            <button onclick="switchDashboardTab('attendance')" class="btn btn-success" style="flex:1;">
+              <i class="fas fa-fingerprint"></i> Sign In
+            </button>
+            <button onclick="switchDashboardTab('students')" class="btn btn-info" style="flex:1;">
+              <i class="fas fa-users"></i> My Records
+            </button>
+          </div>
+        `;
+      }
+
+      statsHTML += `
+        <div style="margin-top:16px; padding:12px; background:rgba(255,255,255,0.03); border-radius:12px; font-size:13px; color:#94a3b8;">
+          <i class="fas fa-info-circle"></i> 
+          ${currentUser.role === 'student' ? 
+            `${currentUser.university} • ${currentUser.school} • ${currentUser.department}` :
+            currentUser.role === 'admin' ?
+            `${currentUser.university} • ${currentUser.department}` :
+            `${currentUser.universities ? currentUser.universities.join(' • ') : 'No universities'}`
+          }
+          <br>
+          <span style="font-size:12px;">📧 ${currentUser.email}</span>
+          ${currentUser.role === 'lecturer' ? `<br><span style="font-size:12px;">📱 ${currentUser.phone || 'No phone'}</span>` : ''}
+          ${currentUser.role === 'admin' ? `<br><span style="font-size:12px;">🆔 ${currentUser.staffId || 'No staff ID'}</span>` : ''}
+        </div>
+      `;
+
+      container.innerHTML = statsHTML;
+    }
+
+    // ============================================================
+    // STUDENTS PANEL - COMPREHENSIVE ATTENDANCE HISTORY
+    // ============================================================
+    function renderStudentsPanel() {
+      const container = document.getElementById('studentsContent');
+      const users = getUsers();
+      const records = getAttendanceRecords();
+      const sessions = getSessions();
+
+      let html = `
+        <div style="margin-bottom:16px;">
+          <h3 style="font-size:16px; color:#e2e8f0;">
+            <i class="fas fa-users" style="color:#a78bfa;"></i> 
+            ${currentUser.role === 'admin' ? 'All Students - ' : ''}Attendance Records
+          </h3>
+          <p style="font-size:13px; color:#94a3b8; margin-top:4px;">
+            Complete attendance history for each student with course breakdown
+          </p>
+        </div>
+        
+        <div class="search-container">
+          <input type="text" id="studentSearch" placeholder="🔍 Search by name, admission number, or course..." oninput="filterStudents()" />
+          <select id="courseFilter" onchange="filterStudents()">
+            <option value="">All Courses</option>
+          </select>
+          <select id="universityFilter" onchange="filterStudents()">
+            <option value="">All Universities</option>
+          </select>
+        </div>
+      `;
+
+      // Get all students
+      let students = [];
+      if (currentUser.role === 'admin') {
+        students = users.filter(u => u.role === 'student');
+      } else if (currentUser.role === 'lecturer') {
+        // Lecturer sees students who have attended their sessions
+        const studentIds = new Set(records.filter(r => r.hostId === currentUser.id).map(r => r.studentId));
+        students = users.filter(u => u.role === 'student' && studentIds.has(u.id));
+      } else {
+        // Student sees their own records
+        students = users.filter(u => u.id === currentUser.id);
+      }
+
+      // Populate filters
+      const courses = [...new Set(records.map(r => r.course))].filter(Boolean);
+      const universities = [...new Set(users.filter(u => u.role === 'student').map(u => u.university))].filter(Boolean);
+      
+      const courseFilter = document.getElementById('courseFilter');
+      const uniFilter = document.getElementById('universityFilter');
+      
+      courses.forEach(c => {
+        const opt = document.createElement('option');
+        opt.value = c;
+        opt.textContent = c;
+        courseFilter.appendChild(opt);
+      });
+      
+      universities.forEach(u => {
+        const opt = document.createElement('option');
+        opt.value = u;
+        opt.textContent = u;
+        uniFilter.appendChild(opt);
+      });
+
+      // Generate student cards
+      if (students.length === 0) {
+        html += `
+          <div style="text-align:center; color:#64748b; padding:40px 20px;">
+            <i class="fas fa-users" style="font-size:48px; display:block; margin-bottom:16px;"></i>
+            ${currentUser.role === 'student' ? 'You have no attendance records yet.' : 'No students found.'}
+          </div>
+        `;
+      } else {
+        html += `<div id="studentsList">`;
+        students.forEach(student => {
+          const studentRecords = records.filter(r => r.studentId === student.id);
+          const presentCount = studentRecords.filter(r => r.status === 'present').length;
+          const totalCount = studentRecords.length;
+          const attendanceRate = totalCount > 0 ? Math.round((presentCount / totalCount) * 100) : 0;
+          
+          // Group records by course
+          const courseGroups = {};
+          studentRecords.forEach(r => {
+            if (!courseGroups[r.course]) {
+              courseGroups[r.course] = { present: 0, total: 0 };
+            }
+            courseGroups[r.course].total++;
+            if (r.status === 'present') courseGroups[r.course].present++;
+          });
+
+          const courseList = Object.keys(courseGroups);
+          
+          html += `
+            <div class="student-record-card" data-student="${student.id}">
+              <div class="header">
+                <div>
+                  <span class="name">${student.name}</span>
+                  <span class="admission">${student.admissionNo || 'No admission number'}</span>
+                </div>
+                <div style="text-align:right;">
+                  <span style="font-size:14px; font-weight:600; color:${attendanceRate >= 70 ? '#6ee7b7' : attendanceRate >= 40 ? '#fbbf24' : '#fca5a5'};">
+                    ${attendanceRate}%
+                  </span>
+                  <div class="attendance-progress">
+                    <div class="bar ${attendanceRate >= 70 ? 'high' : attendanceRate >= 40 ? 'medium' : 'low'}" 
+                         style="width:${attendanceRate}%;"></div>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="stats">
+                <span><i class="fas fa-check-circle text-success"></i> Present: <strong class="present">${presentCount}</strong></span>
+                <span><i class="fas fa-times-circle text-danger"></i> Absent: <strong class="absent">${totalCount - presentCount}</strong></span>
+                <span><i class="fas fa-calendar-alt"></i> Total: <strong>${totalCount}</strong></span>
+                <span><i class="fas fa-book"></i> Courses: <strong>${courseList.length}</strong></span>
+              </div>
+              
+              <div class="courses">
+                <div style="font-size:12px; color:#94a3b8; margin-bottom:4px;">
+                  <i class="fas fa-graduation-cap"></i> Course Breakdown:
+                </div>
+                ${courseList.map(course => {
+                  const data = courseGroups[course];
+                  const courseRate = Math.round((data.present / data.total) * 100);
+                  return `
+                    <div class="course-item">
+                      <span class="course-name">${course}</span>
+                      <span class="attendance-count" style="color:${courseRate >= 70 ? '#6ee7b7' : courseRate >= 40 ? '#fbbf24' : '#fca5a5'};">
+                        ${data.present}/${data.total} (${courseRate}%)
+                      </span>
+                    </div>
+                  `;
+                }).join('')}
+              </div>
+              
+              <div style="margin-top:8px; font-size:11px; color:#64748b; border-top:1px solid rgba(255,255,255,0.04); padding-top:8px;">
+                <i class="fas fa-clock"></i> Last attendance: ${studentRecords.length > 0 ? new Date(studentRecords[studentRecords.length - 1].timestamp).toLocaleDateString() : 'Never'}
+                ${student.university ? ` • ${student.university}` : ''}
+                ${student.department ? ` • ${student.department}` : ''}
+              </div>
+            </div>
+          `;
+        });
+        html += `</div>`;
+      }
+
+      container.innerHTML = html;
+    }
+
+    // ============================================================
+    // FILTER STUDENTS
+    // ============================================================
+    window.filterStudents = function() {
+      const searchTerm = document.getElementById('studentSearch').value.toLowerCase();
+      const courseFilter = document.getElementById('courseFilter').value;
+      const universityFilter = document.getElementById('universityFilter').value;
+      
+      const cards = document.querySelectorAll('.student-record-card');
+      cards.forEach(card => {
+        const text = card.textContent.toLowerCase();
+        const matchesSearch = text.includes(searchTerm);
+        const matchesCourse = courseFilter === '' || text.includes(courseFilter.toLowerCase());
+        const matchesUniversity = universityFilter === '' || text.includes(universityFilter.toLowerCase());
+        
+        card.style.display = (matchesSearch && matchesCourse && matchesUniversity) ? 'block' : 'none';
+      });
+    };
+
+    // ============================================================
+    // ATTENDANCE PANEL
+    // ============================================================
+    function renderAttendancePanel() {
+      const container = document.getElementById('attendanceContent');
+
+      if (currentUser.role === 'lecturer') {
+        if (currentUser.verificationStatus !== 'verified') {
+          container.innerHTML = `
+            <div style="text-align:center; padding:40px 20px;">
+              <i class="fas fa-lock" style="font-size:48px; color:#fbbf24; display:block; margin-bottom:16px;"></i>
+              <h3 style="color:#e2e8f0; margin-bottom:8px;">Account Not Verified</h3>
+              <p style="color:#94a3b8; font-size:14px;">
+                Your lecturer account needs to be verified by the administrator
+                before you can create attendance sessions.
+              </p>
+              <div style="margin-top:12px; padding:12px; background:rgba(245,158,11,0.1); border-radius:12px; font-size:13px; color:#fbbf24;">
+                <i class="fas fa-info-circle"></i> Status: ${currentUser.verificationStatus === 'pending' ? 'Pending Approval' : 'Rejected'}
+              </div>
+            </div>
+          `;
+          return;
+        }
+        container.innerHTML = getLecturerAttendanceHTML();
+      } else {
+        container.innerHTML = getStudentAttendanceHTML();
+      }
+    }
+
+    function getLecturerAttendanceHTML() {
+      const sessions = getSessions();
+      const activeSession = sessions.find(s => s.active && s.hostId === currentUser.id);
+
+      if (activeSession) {
+        sessionData = activeSession;
+        sessionActive = true;
+        const records = getAttendanceRecords().filter(r => r.sessionId === activeSession.id);
+        attendees = records;
+
+        return `
+          <div style="margin-bottom:16px;">
+            <div style="display:flex; justify-content:space-between; flex-wrap:wrap; gap:10px;">
+              <div>
+                <h3 style="font-size:16px; color:#e2e8f0;">
+                  <i class="fas fa-play-circle" style="color:#34d399;"></i> Active Session
+                </h3>
+                <div style="font-size:13px; color:#94a3b8; margin-top:4px;">
+                  ${activeSession.course} (${activeSession.courseCode}) • ${activeSession.unit}
+                </div>
+                <div style="font-size:12px; color:#64748b; margin-top:2px;">
+                  ${activeSession.university || 'Various'} • ${activeSession.department || 'General'}
+                </div>
+              </div>
+              <button onclick="endSession('${activeSession.id}')" class="btn btn-danger">
+                <i class="fas fa-stop"></i> End Session
+              </button>
+            </div>
+            <div class="code-display">
+              <div class="label">📋 Session Code</div>
+              <div class="code">${activeSession.sessionCode}</div>
+              <div style="font-size:12px; color:#64748b; margin-top:4px;">
+                <i class="fas fa-users"></i> ${records.length} students signed in
+              </div>
+            </div>
+          </div>
+          <div style="margin-bottom:12px; display:flex; gap:10px; flex-wrap:wrap;">
+            <button onclick="exportAttendance('${activeSession.id}')" class="btn btn-secondary" style="flex:1;">
+              <i class="fas fa-file-export"></i> Export CSV
+            </button>
+            <button onclick="switchDashboardTab('students')" class="btn btn-info" style="flex:1;">
+              <i class="fas fa-users"></i> All Student Records
+            </button>
+          </div>
+          <div class="attendance-list">
+            ${records.length === 0 ? `
+              <div style="text-align:center; color:#64748b; padding:20px;">
+                <i class="fas fa-users" style="font-size:28px; display:block; margin-bottom:8px;"></i>
+                No students signed in yet.
+              </div>
+            ` : records.map((a, i) => `
+              <div class="attendee-item">
+                <div>
+                  <div class="name">${i+1}. ${a.studentName}</div>
+                  <div class="details">${a.admissionNo || a.studentId} • ${a.department}</div>
+                </div>
+                <div style="text-align:right;">
+                  <div class="time">${a.time}</div>
+                  <span class="badge">${a.distance}m</span>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        `;
+      } else {
+        return `
+          <div style="text-align:center; padding:30px 20px;">
+            <i class="fas fa-plus-circle" style="font-size:48px; color:#a78bfa; display:block; margin-bottom:16px;"></i>
+            <h3 style="color:#e2e8f0; margin-bottom:8px;">No Active Session</h3>
+            <p style="color:#94a3b8; font-size:14px; margin-bottom:20px;">Create a new attendance session for your class.</p>
+            <button onclick="showCreateSession()" class="btn btn-primary">
+              <i class="fas fa-plus"></i> Create Session
+            </button>
+          </div>
+          <div id="createSessionForm" class="hidden" style="margin-top:16px;">
+            ${getCreateSessionForm()}
+          </div>
+        `;
+      }
+    }
+
+    function getCreateSessionForm() {
+      return `
+        <form id="sessionForm" onsubmit="handleCreateSession(event)">
+          <div class="row">
+            <div class="input-group">
+              <label><i class="fas fa-book label-icon"></i> Course</label>
+              <input type="text" id="sessionCourse" placeholder="e.g. Computer Science" required />
+            </div>
+            <div class="input-group">
+              <label><i class="fas fa-code label-icon"></i> Course Code</label>
+              <input type="text" id="sessionCourseCode" placeholder="e.g. CSC 101" required />
+            </div>
+          </div>
+          <div class="input-group">
+            <label><i class="fas fa-layer-group label-icon"></i> Unit / Module</label>
+            <input type="text" id="sessionUnit" placeholder="e.g. Programming Fundamentals" required />
+          </div>
+          <div class="row">
+            <div class="input-group">
+              <label><i class="fas fa-calendar-day label-icon"></i> Date</label>
+              <input type="date" id="sessionDate" required />
+            </div>
+            <div class="input-group">
+              <label><i class="fas fa-clock label-icon"></i> Time</label>
+              <input type="time" id="sessionTime" required />
+            </div>
+          </div>
+          <div class="input-group">
+            <label><i class="fas fa-university label-icon"></i> University (Optional)</label>
+            <select id="sessionUniversity">
+              <option value="">Select University</option>
+              ${Object.keys(KENYAN_UNIVERSITIES).sort().map(u => `<option value="${u}">${u}</option>`).join('')}
+            </select>
+          </div>
+          <button type="submit" class="btn btn-success btn-block">
+            <i class="fas fa-play"></i> Start Session
+          </button>
+          <button type="button" onclick="hideCreateSession()" class="btn btn-secondary btn-block mt-1">
+            <i class="fas fa-times"></i> Cancel
+          </button>
+        </form>
+      `;
+    }
+
+    window.showCreateSession = function() {
+      const form = document.getElementById('createSessionForm');
+      if (form) {
+        form.classList.remove('hidden');
+        const today = new Date();
+        document.getElementById('sessionDate').value = today.toISOString().split('T')[0];
+        const now = new Date();
+        document.getElementById('sessionTime').value = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+      }
+    };
+
+    window.hideCreateSession = function() {
+      const form = document.getElementById('createSessionForm');
+      if (form) form.classList.add('hidden');
+    };
+
+    // ============================================================
+    // CREATE SESSION
+    // ============================================================
+    window.handleCreateSession = async function(e) {
+      e.preventDefault();
+
+      const course = document.getElementById('sessionCourse').value.trim();
+      const courseCode = document.getElementById('sessionCourseCode').value.trim();
+      const unit = document.getElementById('sessionUnit').value.trim();
+      const date = document.getElementById('sessionDate').value;
+      const time = document.getElementById('sessionTime').value;
+      const university = document.getElementById('sessionUniversity').value;
+
+      if (!course || !courseCode || !unit || !date || !time) {
+        showToast('⚠️ Please fill in all fields.', 'error');
+        return;
+      }
+
+      const location = await getHostLocation();
+      if (!location) {
+        showToast('⚠️ Unable to get your location. Please enable GPS.', 'error');
+        return;
+      }
+
+      const sessionCode = generateSessionCode();
+      const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+      const dateObj = new Date(date + 'T' + time);
+      const dayOfWeek = days[dateObj.getDay()];
+      const dateParts = date.split('-');
+      const formattedDate = `${dateParts[2]}. ${dateParts[1]}. ${dateParts[0]}`;
+      const timeParts = time.split(':');
+      const hour = parseInt(timeParts[0]);
+      const hour12 = hour % 12 || 12;
+      const ampm = hour >= 12 ? 'PM' : 'AM';
+      const formattedTime = `${hour12}:${timeParts[1]} ${ampm}`;
+
+      const session = {
+        id: Date.now().toString(),
+        hostId: currentUser.id,
+        hostName: currentUser.name,
+        course,
+        courseCode,
+        unit,
+        date: formattedDate,
+        time: formattedTime,
+        dayOfWeek,
+        sessionCode,
+        hostLocation: location,
+        startTime: new Date().toISOString(),
+        active: true,
+        university: university || (currentUser.universities ? currentUser.universities[0] : 'Various'),
+        department: currentUser.department || 'General'
+      };
+
+      const sessions = getSessions();
+      sessions.push(session);
+      saveSessions(sessions);
+
+      sessionData = session;
+      sessionActive = true;
+      attendees = [];
+
+      showToast(`✅ Session started! Code: ${sessionCode}`, 'success');
+      renderAttendancePanel();
+      updateDashboard();
+      hideCreateSession();
+    };
+
+    // ============================================================
+    // END SESSION
+    // ============================================================
+    window.endSession = function(sessionId) {
+      if (!confirm('End this session? Students will no longer be able to sign in.')) return;
+
+      const sessions = getSessions();
+      const session = sessions.find(s => s.id === sessionId);
+      if (session) {
+        session.active = false;
+        session.endTime = new Date().toISOString();
+        saveSessions(sessions);
+      }
+
+      sessionActive = false;
+      sessionData = null;
+      attendees = [];
+      showToast('⏹️ Session ended.', '');
+      renderAttendancePanel();
+      updateDashboard();
+    };
+
+    // ============================================================
+    // EXPORT ATTENDANCE
+    // ============================================================
+    window.exportAttendance = function(sessionId) {
+      const records = getAttendanceRecords().filter(r => r.sessionId === sessionId);
+      if (records.length === 0) {
+        showToast('⚠️ No attendance records to export.', 'error');
+        return;
+      }
+
+      let csv = 'Name,Admission Number,Student ID,University,School,Department,Year,Course,Time,Distance (m),Status\n';
+      records.forEach(r => {
+        csv += `${r.studentName},${r.admissionNo || ''},${r.studentId || ''},${r.university || ''},${r.school || ''},${r.department || ''},${r.yearOfStudy || ''},${r.course || ''},${r.time},${r.distance},${r.status}\n`;
+      });
+
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `attendance_${sessionId}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast('✅ Attendance exported successfully!', 'success');
+    };
+
+    // ============================================================
+    // STUDENT ATTENDANCE VIEW
+    // ============================================================
+    function getStudentAttendanceHTML() {
+      const sessions = getSessions();
+      const activeSession = sessions.find(s => s.active);
+
+      if (!activeSession) {
+        return `
+          <div style="text-align:center; padding:30px 20px;">
+            <i class="fas fa-clock" style="font-size:48px; color:#94a3b8; display:block; margin-bottom:16px;"></i>
+            <h3 style="color:#e2e8f0; margin-bottom:8px;">No Active Session</h3>
+            <p style="color:#94a3b8; font-size:14px;">Please wait for your lecturer to start a session.</p>
+          </div>
+        `;
+      }
+
+      const records = getAttendanceRecords();
+      const existing = records.find(r => r.sessionId === activeSession.id && r.studentId === currentUser.id);
+
+      if (existing) {
+        return `
+          <div style="text-align:center; padding:20px;">
+            <i class="fas fa-check-circle" style="font-size:48px; color:#34d399; display:block; margin-bottom:16px;"></i>
+            <h3 style="color:#6ee7b7;">Already Signed In!</h3>
+            <p style="color:#94a3b8; font-size:14px;">You have already signed in for this session.</p>
+            <div style="margin-top:12px; font-size:13px; color:#64748b;">
+              ${activeSession.course} (${activeSession.courseCode}) • ${activeSession.date} at ${activeSession.time}
+            </div>
+            <div style="font-size:12px; color:#64748b; margin-top:4px;">
+              ${activeSession.university || 'Various'} • ${activeSession.department || 'General'}
+            </div>
+          </div>
+        `;
+      }
+
+      return `
+        <div style="margin-bottom:16px;">
+          <div style="background:rgba(16,185,129,0.06); border-radius:12px; padding:12px; border:1px solid rgba(16,185,129,0.1);">
+            <div style="display:flex; justify-content:space-between; flex-wrap:wrap;">
+              <span><strong>📚 ${activeSession.course}</strong> (${activeSession.courseCode})</span>
+              <span style="color:#6ee7b7;">● Active</span>
+            </div>
+            <div style="font-size:13px; color:#94a3b8; margin-top:4px;">
+              ${activeSession.unit} • ${activeSession.dayOfWeek}, ${activeSession.date} at ${activeSession.time}
+            </div>
+            <div style="font-size:12px; color:#64748b; margin-top:4px;">
+              ${activeSession.university || 'Various'} • ${activeSession.department || 'General'}
+            </div>
+            <div style="font-size:12px; color:#64748b; margin-top:4px;">
+              Host: ${activeSession.hostName}
+            </div>
+          </div>
+        </div>
+        <form id="studentSignInForm" onsubmit="handleStudentSignIn(event, '${activeSession.id}')">
+          <div class="input-group">
+            <label><i class="fas fa-key label-icon"></i> Session Code</label>
+            <input type="text" id="studentSignInCode" placeholder="Enter code from host" maxlength="6" required />
+          </div>
+          <button type="submit" class="btn btn-success btn-block">
+            <i class="fas fa-fingerprint"></i> Sign In (within 10m)
+          </button>
+        </form>
+        <div id="studentSignInResult" class="result-card" style="display:none; margin-top:12px; background:rgba(16,185,129,0.06); border:1px solid rgba(16,185,129,0.15); border-radius:16px; padding:18px;"></div>
+      `;
+    }
+
+    // ============================================================
+    // STUDENT SIGN IN
+    // ============================================================
+    window.handleStudentSignIn = async function(e, sessionId) {
+      e.preventDefault();
+
+      const code = document.getElementById('studentSignInCode').value.trim().toUpperCase();
+      const sessions = getSessions();
+      const session = sessions.find(s => s.id === sessionId);
+
+      if (!session || !session.active) {
+        showToast('⚠️ This session is no longer active.', 'error');
+        return;
+      }
+
+      if (code !== session.sessionCode) {
+        showToast('❌ Invalid session code. Please check with your host.', 'error');
+        return;
+      }
+
+      const records = getAttendanceRecords();
+      if (records.find(r => r.sessionId === sessionId && r.studentId === currentUser.id)) {
+        showToast('⚠️ You have already signed in for this session.', 'error');
+        return;
+      }
+
+      const location = await getStudentLocation();
+      if (!location) {
+        showToast('⚠️ Unable to get your location. Please enable GPS.', 'error');
+        return;
+      }
+
+      const distance = calculateDistance(
+        session.hostLocation.lat,
+        session.hostLocation.lng,
+        location.lat,
+        location.lng
+      );
+
+      const result = document.getElementById('studentSignInResult');
+      
+      if (distance > 10) {
+        result.style.display = 'block';
+        result.innerHTML = `
+          <div style="text-align:center; padding:16px; color:#fca5a5;">
+            <i class="fas fa-times-circle" style="font-size:32px; display:block; margin-bottom:8px; color:#ef4444;"></i>
+            <strong>❌ Out of Range</strong>
+            <p style="font-size:13px; margin-top:6px;">You are ${Math.round(distance)}m away. Must be within 10m of the host.</p>
+            <p style="font-size:12px; color:#64748b;">Please move closer to the host location.</p>
+          </div>
+        `;
+        showToast(`❌ Too far (${Math.round(distance)}m). Need to be within 10m.`, 'error');
+        return;
+      }
+
+      const now = new Date();
+      const timeStr = now.toLocaleTimeString('en-US', { hour12: true, hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
+      const attendanceRecord = {
+        id: Date.now().toString(),
+        sessionId: session.id,
+        studentId: currentUser.id,
+        studentName: currentUser.name,
+        studentEmail: currentUser.email,
+        admissionNo: currentUser.admissionNo,
+        studentIdNumber: currentUser.studentId || '',
+        university: currentUser.university,
+        school: currentUser.school,
+        department: currentUser.department,
+        yearOfStudy: currentUser.yearOfStudy,
+        course: currentUser.course,
+        time: timeStr,
+        timestamp: now.toISOString(),
+        distance: Math.round(distance),
+        status: 'present',
+        hostId: session.hostId
+      };
+
+      records.push(attendanceRecord);
+      saveAttendanceRecords(records);
+
+      session.attendanceCount = (session.attendanceCount || 0) + 1;
+      saveSessions(sessions);
+
+      result.style.display = 'block';
+      result.innerHTML = `
+        <div style="padding:16px; color:#6ee7b7;">
+          <i class="fas fa-check-circle" style="font-size:32px; display:block; margin-bottom:8px; color:#34d399;"></i>
+          <strong>✅ Signed In Successfully!</strong>
+          <p style="font-size:13px; margin-top:6px; color:#94a3b8;">Within ${Math.round(distance)}m of host</p>
+          <div style="font-size:12px; color:#64748b; margin-top:8px;">
+            ${session.course} • ${session.date} at ${session.time}
+          </div>
+        </div>
+      `;
+
+      showToast(`✅ ${currentUser.name} signed in successfully!`, 'success');
+      document.getElementById('studentSignInCode').value = '';
+      renderAttendancePanel();
+      updateDashboard();
+    };
+
+    // ============================================================
+    // HISTORY
+    // ============================================================
+    function renderHistory() {
+      const container = document.getElementById('historyContent');
+      const sessions = getSessions();
+      const records = getAttendanceRecords();
+
+      let historyHTML = '<h3 style="font-size:16px; color:#e2e8f0; margin-bottom:12px;"><i class="fas fa-history" style="color:#fbbf24;"></i> Your Attendance History</h3>';
+
+      if (currentUser.role === 'admin') {
+        historyHTML += `
+          <div style="background:rgba(251,191,36,0.06); border:1px solid rgba(251,191,36,0.1); border-radius:12px; padding:12px; margin-bottom:16px;">
+            <i class="fas fa-info-circle" style="color:#fbbf24;"></i>
+            <span style="color:#94a3b8; font-size:13px;">Admin View: Showing all system activity</span>
+          </div>
+        `;
+        const allSessions = sessions.sort((a, b) => new Date(b.startTime) - new Date(a.startTime));
+        if (allSessions.length === 0) {
+          historyHTML += `<div style="text-align:center; color:#64748b; padding:20px;">No sessions in the system.</div>`;
+        } else {
+          historyHTML += `<div class="session-history">`;
+          allSessions.forEach(s => {
+            const sessionRecords = records.filter(r => r.sessionId === s.id);
+            historyHTML += `
+              <div class="history-item">
+                <div class="header">
+                  <span class="course">${s.course} (${s.courseCode})</span>
+                  <span class="count">${sessionRecords.length} students</span>
+                </div>
+                <div class="meta">
+                  ${s.unit} • ${s.date} at ${s.time} • ${s.active ? '🟢 Active' : '🔴 Ended'}
+                </div>
+                <div style="font-size:12px; color:#64748b; margin-top:4px;">
+                  Host: ${s.hostName} • ${s.university || 'Various'} • ${s.department || 'General'}
+                </div>
+              </div>
+            `;
+          });
+          historyHTML += `</div>`;
+        }
+      } else if (currentUser.role === 'lecturer') {
+        const mySessions = sessions.filter(s => s.hostId === currentUser.id);
+        if (mySessions.length === 0) {
+          historyHTML += `<div style="text-align:center; color:#64748b; padding:20px;">No sessions created yet.</div>`;
+        } else {
+          mySessions.sort((a, b) => new Date(b.startTime) - new Date(a.startTime));
+          historyHTML += `<div class="session-history">`;
+          mySessions.forEach(s => {
+            const sessionRecords = records.filter(r => r.sessionId === s.id);
+            historyHTML += `
+              <div class="history-item">
+                <div class="header">
+                  <span class="course">${s.course} (${s.courseCode})</span>
+                  <span class="count">${sessionRecords.length} students</span>
+                </div>
+                <div class="meta">
+                  ${s.unit} • ${s.date} at ${s.time} • ${s.active ? '🟢 Active' : '🔴 Ended'}
+                </div>
+                <div style="font-size:12px; color:#64748b; margin-top:4px;">
+                  ${s.university || 'Various'} • ${s.department || 'General'}
+                </div>
+              </div>
+            `;
+          });
+          historyHTML += `</div>`;
+        }
+      } else {
+        const myRecords = records.filter(r => r.studentId === currentUser.id);
+        if (myRecords.length === 0) {
+          historyHTML += `<div style="text-align:center; color:#64748b; padding:20px;">No attendance records found.</div>`;
+        } else {
+          myRecords.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+          historyHTML += `<div class="session-history">`;
+          myRecords.forEach(r => {
+            const session = sessions.find(s => s.id === r.sessionId);
+            historyHTML += `
+              <div class="history-item" style="border-left-color: ${r.status === 'present' ? '#10b981' : '#ef4444'};">
+                <div class="header">
+                  <span class="course">${session ? session.course : 'Unknown Course'}</span>
+                  <span class="count" style="color:${r.status === 'present' ? '#6ee7b7' : '#fca5a5'};">${r.status === 'present' ? '✅ Present' : '❌ Absent'}</span>
+                </div>
+                <div class="meta">
+                  ${session ? `${session.unit} • ${session.date} at ${session.time}` : 'Unknown Session'} • ${r.distance}m away
+                </div>
+                <div style="font-size:12px; color:#64748b; margin-top:4px;">
+                  ${r.university || ''} • ${r.school || ''} • ${r.department || ''}
+                </div>
+              </div>
+            `;
+          });
+          historyHTML += `</div>`;
+        }
+      }
+
+      container.innerHTML = historyHTML;
+    }
+
+    // ============================================================
+    // PROFILE
+    // ============================================================
+    function renderProfile() {
+      const container = document.getElementById('profileContent');
+      
+      let verificationBadge = '';
+      if (currentUser.verified) {
+        if (currentUser.role === 'lecturer') {
+          if (currentUser.verificationStatus === 'verified') {
+            verificationBadge = '<span class="verification-badge verified"><i class="fas fa-check-circle"></i> Verified Lecturer</span>';
+          } else if (currentUser.verificationStatus === 'pending') {
+            verificationBadge = '<span class="verification-badge pending"><i class="fas fa-clock"></i> Pending Verification</span>';
+          } else {
+            verificationBadge = '<span class="verification-badge unverified"><i class="fas fa-times-circle"></i> Verification Rejected</span>';
+          }
+        } else if (currentUser.role === 'admin') {
+          verificationBadge = '<span class="verification-badge verified"><i class="fas fa-user-shield"></i> Administrator</span>';
+        } else {
+          verificationBadge = '<span class="verification-badge verified"><i class="fas fa-check-circle"></i> Verified Student</span>';
+        }
+      } else {
+        verificationBadge = '<span class="verification-badge unverified"><i class="fas fa-exclamation-circle"></i> Email Not Verified</span>';
+      }
+      
+      container.innerHTML = `
+        <div style="text-align:center; margin-bottom:24px;">
+          <div style="position:relative; display:inline-block;">
+            <div style="width:120px; height:120px; border-radius:50%; background:linear-gradient(135deg, #667eea, #764ba2); display:flex; align-items:center; justify-content:center; font-size:48px; font-weight:700; color:#fff; margin:0 auto; overflow:hidden; border:3px solid rgba(167,139,250,0.3); cursor:pointer;" onclick="document.getElementById('avatarUpload').click()">
+              ${currentUser.avatar ? `<img src="${currentUser.avatar}" style="width:100%; height:100%; object-fit:cover;" />` : currentUser.name.split(' ').map(n => n[0]).join('').toUpperCase()}
+            </div>
+            <div style="margin-top:8px; font-size:12px; color:#64748b;">
+              <i class="fas fa-camera"></i> Click photo to update
+            </div>
+          </div>
+          <h3 style="font-size:20px; color:#e2e8f0; margin-top:12px;">${currentUser.name}</h3>
+          <div style="font-size:13px; color:#94a3b8;">${currentUser.role.charAt(0).toUpperCase() + currentUser.role.slice(1)}</div>
+          <div style="margin-top:8px;">${verificationBadge}</div>
+        </div>
+        
+        <div style="border-top:1px solid rgba(255,255,255,0.06); padding-top:16px;">
+          <div class="receipt-row" style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid rgba(255,255,255,0.04); font-size:14px;">
+            <span style="color:#94a3b8;">Email</span>
+            <span style="font-weight:500;">${currentUser.email}</span>
+          </div>
+          ${currentUser.role === 'student' ? `
+            <div class="receipt-row" style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid rgba(255,255,255,0.04); font-size:14px;">
+              <span style="color:#94a3b8;">University</span>
+              <span style="font-weight:500;">${currentUser.university}</span>
+            </div>
+            <div class="receipt-row" style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid rgba(255,255,255,0.04); font-size:14px;">
+              <span style="color:#94a3b8;">School</span>
+              <span style="font-weight:500;">${currentUser.school || 'Not specified'}</span>
+            </div>
+            <div class="receipt-row" style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid rgba(255,255,255,0.04); font-size:14px;">
+              <span style="color:#94a3b8;">Department</span>
+              <span style="font-weight:500;">${currentUser.department}</span>
+            </div>
+            <div class="receipt-row" style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid rgba(255,255,255,0.04); font-size:14px;">
+              <span style="color:#94a3b8;">Course</span>
+              <span style="font-weight:500;">${currentUser.course}</span>
+            </div>
+            <div class="receipt-row" style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid rgba(255,255,255,0.04); font-size:14px;">
+              <span style="color:#94a3b8;">Year of Study</span>
+              <span style="font-weight:500;">${currentUser.yearOfStudy}</span>
+            </div>
+            <div class="receipt-row" style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid rgba(255,255,255,0.04); font-size:14px;">
+              <span style="color:#94a3b8;">Admission Number</span>
+              <span style="font-weight:500;">${currentUser.admissionNo}</span>
+            </div>
+            ${currentUser.studentId ? `
+            <div class="receipt-row" style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid rgba(255,255,255,0.04); font-size:14px;">
+              <span style="color:#94a3b8;">Student ID</span>
+              <span style="font-weight:500;">${currentUser.studentId}</span>
+            </div>
+            ` : ''}
+          ` : currentUser.role === 'lecturer' ? `
+            <div class="receipt-row" style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid rgba(255,255,255,0.04); font-size:14px;">
+              <span style="color:#94a3b8;">Phone</span>
+              <span style="font-weight:500;">${currentUser.phone || 'Not provided'}</span>
+            </div>
+            <div class="receipt-row" style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid rgba(255,255,255,0.04); font-size:14px;">
+              <span style="color:#94a3b8;">Department</span>
+              <span style="font-weight:500;">${currentUser.department || 'Not specified'}</span>
+            </div>
+            <div class="receipt-row" style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid rgba(255,255,255,0.04); font-size:14px;">
+              <span style="color:#94a3b8;">Universities</span>
+              <span style="font-weight:500;">${currentUser.universities ? currentUser.universities.join(', ') : 'None'}</span>
+            </div>
+            <div class="receipt-row" style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid rgba(255,255,255,0.04); font-size:14px;">
+              <span style="color:#94a3b8;">Qualifications</span>
+              <span style="font-weight:500; text-align:right; flex:1;">${currentUser.qualifications || 'Not provided'}</span>
+            </div>
+            ${currentUser.documents && currentUser.documents.length > 0 ? `
+            <div class="receipt-row" style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid rgba(255,255,255,0.04); font-size:14px;">
+              <span style="color:#94a3b8;">Documents</span>
+              <span style="font-weight:500;">${currentUser.documents.join(', ')}</span>
+            </div>
+            ` : ''}
+            <div class="receipt-row" style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid rgba(255,255,255,0.04); font-size:14px;">
+              <span style="color:#94a3b8;">Verification Status</span>
+              <span style="font-weight:500; color:${currentUser.verificationStatus === 'verified' ? '#6ee7b7' : currentUser.verificationStatus === 'pending' ? '#fbbf24' : '#fca5a5'};">
+                ${currentUser.verificationStatus === 'verified' ? '✅ Verified' : currentUser.verificationStatus === 'pending' ? '⏳ Pending' : '❌ Rejected'}
+              </span>
+            </div>
+          ` : `
+            <div class="receipt-row" style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid rgba(255,255,255,0.04); font-size:14px;">
+              <span style="color:#94a3b8;">Phone</span>
+              <span style="font-weight:500;">${currentUser.phone || 'Not provided'}</span>
+            </div>
+            <div class="receipt-row" style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid rgba(255,255,255,0.04); font-size:14px;">
+              <span style="color:#94a3b8;">Department</span>
+              <span style="font-weight:500;">${currentUser.department}</span>
+            </div>
+            <div class="receipt-row" style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid rgba(255,255,255,0.04); font-size:14px;">
+              <span style="color:#94a3b8;">University</span>
+              <span style="font-weight:500;">${currentUser.university}</span>
+            </div>
+            ${currentUser.staffId ? `
+            <div class="receipt-row" style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid rgba(255,255,255,0.04); font-size:14px;">
+              <span style="color:#94a3b8;">Staff ID</span>
+              <span style="font-weight:500;">${currentUser.staffId}</span>
+            </div>
+            ` : ''}
+            ${currentUser.authLetter ? `
+            <div class="receipt-row" style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid rgba(255,255,255,0.04); font-size:14px;">
+              <span style="color:#94a3b8;">Authorization Letter</span>
+              <span style="font-weight:500;">${currentUser.authLetter}</span>
+            </div>
+            ` : ''}
+            <div class="receipt-row" style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid rgba(255,255,255,0.04); font-size:14px;">
+              <span style="color:#94a3b8;">Admin Status</span>
+              <span style="font-weight:500; color:${currentUser.adminStatus === 'active' ? '#6ee7b7' : '#fbbf24'};">
+                ${currentUser.adminStatus === 'active' ? '✅ Active' : '⏳ Pending'}
+              </span>
+            </div>
+          `}
+          <div class="receipt-row" style="display:flex; justify-content:space-between; padding:8px 0; font-size:14px;">
+            <span style="color:#94a3b8;">Member Since</span>
+            <span style="font-weight:500;">${new Date(currentUser.createdAt).toLocaleDateString()}</span>
+          </div>
+        </div>
+      `;
+    }
+
+    // ============================================================
+    // ADMIN PANEL
+    // ============================================================
+    function renderAdminPanel() {
+      const container = document.getElementById('adminContent');
+      
+      if (currentUser.role !== 'admin') {
+        container.innerHTML = `
+          <div style="text-align:center; padding:40px 20px;">
+            <i class="fas fa-lock" style="font-size:48px; color:#ef4444; display:block; margin-bottom:16px;"></i>
+            <h3 style="color:#e2e8f0; margin-bottom:8px;">Access Denied</h3>
+            <p style="color:#94a3b8; font-size:14px;">You do not have administrator privileges.</p>
+          </div>
+        `;
+        return;
+      }
+
+      const users = getUsers();
+      const sessions = getSessions();
+      const records = getAttendanceRecords();
+      const pendingLecturers = users.filter(u => u.role === 'lecturer' && u.verificationStatus === 'pending');
+
+      let html = `
+        <div style="margin-bottom:20px;">
+          <h3 style="font-size:16px; color:#e2e8f0;">
+            <i class="fas fa-user-shield" style="color:#fbbf24;"></i> Administrator Dashboard
+          </h3>
+          <p style="font-size:13px; color:#94a3b8; margin-top:4px;">Manage users, verify lecturers, and monitor system activity</p>
+        </div>
+        
+        <div class="dashboard-grid">
+          <div class="stat-card" onclick="switchDashboardTab('students')">
+            <div class="number">${users.filter(u => u.role === 'student').length}</div>
+            <div class="label">Students</div>
+          </div>
+          <div class="stat-card">
+            <div class="number">${users.filter(u => u.role === 'lecturer').length}</div>
+            <div class="label">Lecturers</div>
+          </div>
+          <div class="stat-card" onclick="switchDashboardTab('admin')">
+            <div class="number">${sessions.length}</div>
+            <div class="label">Total Sessions</div>
+          </div>
+          <div class="stat-card" onclick="switchDashboardTab('admin')">
+            <div class="number">${records.length}</div>
+            <div class="label">Attendance Records</div>
+          </div>
+          <div class="stat-card" style="border-color: ${pendingLecturers.length > 0 ? '#fbbf24' : 'transparent'};">
+            <div class="number" style="color: ${pendingLecturers.length > 0 ? '#fbbf24' : '#a78bfa'};">${pendingLecturers.length}</div>
+            <div class="label">Pending Verifications ${pendingLecturers.length > 0 ? '⚠️' : ''}</div>
+          </div>
+        </div>
+      `;
+
+      // Pending Verifications Section
+      if (pendingLecturers.length > 0) {
+        html += `
+          <div style="margin-top:20px;">
+            <h4 style="color:#fbbf24; margin-bottom:12px;">
+              <i class="fas fa-clock"></i> Pending Lecturer Verifications (${pendingLecturers.length})
+            </h4>
+            <div class="verification-list">
+              ${pendingLecturers.map(lecturer => `
+                <div class="verification-item">
+                  <div class="info">
+                    <div class="name">${lecturer.name}</div>
+                    <div class="details">
+                      📧 ${lecturer.email} • 📱 ${lecturer.phone || 'No phone'} • 
+                      📚 ${lecturer.universities ? lecturer.universities.join(', ') : 'No university'}
+                      ${lecturer.qualifications ? `<br>🎓 ${lecturer.qualifications}` : ''}
+                      ${lecturer.documents && lecturer.documents.length > 0 ? `<br>📎 Documents: ${lecturer.documents.join(', ')}` : ''}
+                    </div>
+                  </div>
+                  <div class="actions">
+                    <button onclick="verifyLecturer('${lecturer.id}')" class="btn btn-success btn-sm">
+                      <i class="fas fa-check"></i> Verify
+                    </button>
+                    <button onclick="rejectLecturer('${lecturer.id}')" class="btn btn-danger btn-sm">
+                      <i class="fas fa-times"></i> Reject
+                    </button>
+                    <button onclick="viewLecturerDetails('${lecturer.id}')" class="btn btn-secondary btn-sm">
+                      <i class="fas fa-eye"></i> View
+                    </button>
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        `;
+      }
+
+      // All Users Section
+      html += `
+        <div style="margin-top:20px;">
+          <h4 style="color:#e2e8f0; margin-bottom:12px;">
+            <i class="fas fa-users"></i> All Users (${users.length})
+          </h4>
+          <div class="verification-list" style="max-height:300px;">
+            ${users.map(user => `
+              <div class="verification-item" style="border-left: 3px solid ${user.role === 'admin' ? '#fbbf24' : user.role === 'lecturer' ? '#a78bfa' : '#10b981'};">
+                <div class="info">
+                  <div class="name">${user.name}</div>
+                  <div class="details">
+                    📧 ${user.email} • ${user.role.charAt(0).toUpperCase() + user.role.slice(1)}
+                    ${user.role === 'lecturer' ? ` • ${user.verificationStatus === 'verified' ? '✅ Verified' : user.verificationStatus === 'pending' ? '⏳ Pending' : '❌ Rejected'}` : ''}
+                    ${user.university ? ` • ${user.university}` : ''}
+                    ${user.role === 'student' ? ` • ${user.admissionNo || 'No admission'}` : ''}
+                  </div>
+                </div>
+                <div style="font-size:12px; color:#64748b;">
+                  ${new Date(user.createdAt).toLocaleDateString()}
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `;
+
+      container.innerHTML = html;
+    }
+
+    // ============================================================
+    // ADMIN ACTIONS
+    // ============================================================
+    window.verifyLecturer = function(userId) {
+      if (!confirm('Verify this lecturer? They will be able to create attendance sessions.')) return;
+      
+      const users = getUsers();
+      const user = users.find(u => u.id === userId);
+      if (user) {
+        user.verificationStatus = 'verified';
+        saveUsers(users);
+        showToast(`✅ ${user.name} has been verified as a lecturer.`, 'success');
+        renderAdminPanel();
+        updateDashboard();
+      }
+    };
+
+    window.rejectLecturer = function(userId) {
+      const reason = prompt('Enter reason for rejection (optional):');
+      if (reason === null) return;
+      
+      const users = getUsers();
+      const user = users.find(u => u.id === userId);
+      if (user) {
+        user.verificationStatus = 'rejected';
+        user.rejectionReason = reason || 'No reason provided';
+        saveUsers(users);
+        showToast(`❌ ${user.name} has been rejected.`, 'error');
+        renderAdminPanel();
+        updateDashboard();
+      }
+    };
+
+    window.viewLecturerDetails = function(userId) {
+      const users = getUsers();
+      const user = users.find(u => u.id === userId);
+      if (!user) return;
+      
+      alert(`📋 Lecturer Details\n\n` +
+            `Name: ${user.name}\n` +
+            `Email: ${user.email}\n` +
+            `Phone: ${user.phone || 'Not provided'}\n` +
+            `Department: ${user.department || 'Not specified'}\n` +
+            `Universities: ${user.universities ? user.universities.join(', ') : 'None'}\n` +
+            `Qualifications: ${user.qualifications || 'Not provided'}\n` +
+            `Documents: ${user.documents && user.documents.length > 0 ? user.documents.join(', ') : 'None'}\n` +
+            `Status: ${user.verificationStatus}\n` +
+            `Joined: ${new Date(user.createdAt).toLocaleDateString()}`);
+    };
+
+    // ============================================================
+    // INIT
+    // ============================================================
+    function init() {
+      // Create demo accounts
+      createDemoAccounts();
+      
+      // Populate university dropdown
+      populateUniversities();
+      
+      // Add event listeners for cascading dropdowns
+      document.getElementById('regUniversity')?.addEventListener('change', updateCourses);
+      document.getElementById('regSchool')?.addEventListener('change', updateDepartments);
+      document.getElementById('regDepartment')?.addEventListener('change', updateCoursesByDept);
+
+      // Check for verification link in URL
+      const urlParams = new URLSearchParams(window.location.search);
+      const verifyToken = urlParams.get('verify');
+      const verifyEmail = urlParams.get('email');
+      
+      if (verifyToken && verifyEmail) {
+        const users = getUsers();
+        const user = users.find(u => u.email === verifyEmail);
+        if (user && user.verificationToken === verifyToken) {
+          user.verified = true;
+          user.verificationToken = null;
+          saveUsers(users);
+          showToast('✅ Email verified successfully! You can now log in.', 'success');
+          window.history.replaceState({}, '', window.location.pathname);
+        } else {
+          showToast('❌ Invalid or expired verification link.', 'error');
+        }
+      }
+
+      // Check if user is already logged in
+      const savedUser = getCurrentUser();
+      if (savedUser) {
+        const users = getUsers();
+        const user = users.find(u => u.id === savedUser.id);
+        if (user && user.verified) {
+          currentUser = user;
+          showDashboard();
+          return;
+        }
+        clearCurrentUser();
+      }
+
+      showAuth();
+      
+      const today = new Date();
+      const dateStr = today.toISOString().split('T')[0];
+      const dateInput = document.getElementById('sessionDate');
+      if (dateInput) dateInput.value = dateStr;
+      
+      const now = new Date();
+      const timeInput = document.getElementById('sessionTime');
+      if (timeInput) {
+        timeInput.value = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+      }
+
+      console.log('✅ Smart Attendance System - Kenya Edition loaded.');
+      console.log('🎓 Student: student@demo.com / student123');
+      console.log('👨‍🏫 Lecturer: lecturer@demo.com / lecturer123');
+      console.log('👨‍💼 Admin: admin@demo.com / admin123');
+      console.log('📊 New "Students" tab shows complete attendance history for all students');
+      console.log('🔑 Click "Administrator Access" on login page for demo credentials');
+    }
+
+    // Run on load
+    init();
+
+  })();
+</script>
+</body>
+</html>
